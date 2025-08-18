@@ -162,8 +162,8 @@ class UserController extends Controller
             $fileError = $_FILES['file']['error'];
 
             if ($fileError == UPLOAD_ERR_OK) {
-                //$destino = '/home/consultora.dp.8/gutierrez/web/images/usr_img';
-               $destino = '/Users/danielponce/Gutierrez/gutierrez/web/images/usr_img';
+               $destino = '/home/consultora.dp.8/gutierrez/web/images/usr_img';
+               //$destino = '/Users/danielponce/Gutierrez/gutierrez/web/images/usr_img';
                 $pdf_info = explode(".", $_FILES['file']['name']);
                 $tipo = end($pdf_info);
                 $archivo = 'usr_img_' . $_FILES ['file']['name'];
