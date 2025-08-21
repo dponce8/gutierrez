@@ -30,7 +30,6 @@ use yii\helpers\Html;
 
                             <p>
                             <?= Yii::$app->user->identity->nombre.' '.Yii::$app->user->identity->apellido ?>
-                                <small>Plan: </small>
                             </p>
                         </li>
 
