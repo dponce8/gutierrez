@@ -101,7 +101,4 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <script>
-    function mostrarAyuda() {
-        window.open("https://ecopal-cloud.com/ayuda/Personas.pdf", "_blank");
-    }
 </script>    

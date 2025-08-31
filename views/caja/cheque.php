@@ -83,10 +83,6 @@
         filtrarCheques();
     });
 
-    function mostrarAyuda() {
-        window.open("https://ecopal-cloud.com/ayuda/Cheques.pdf", "_blank");
-    }
-
     function filtrarCheques() {
         $.post("index.php?r=caja/cheque-lista&caja="+$('#s_caja_filtro').val()+
         "&banco="+$('#s_banco_filtro').val()+"&tipo=" + $('#s_tipo_filtro').val()+

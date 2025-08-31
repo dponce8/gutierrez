@@ -11,14 +11,14 @@ if ($tipoConcepto == 2) {    // Orden de pago
             </div>
             </td>
             <td rowspan="3" width="10" style="font-size: 9px; border-top-style: solid;"></td>
-            <td align="left" width="250" style="font-size: 14px; font-weight: bolder; border-top-style: solid;">ECOPAL SRL</td>
+            <td align="left" width="250" style="font-size: 14px; font-weight: bolder; border-top-style: solid;">Gutierrez Hermanos</td>
             <td align="right" width="200" style="font-size: 9px; border-top-style: solid;  border-right-style: solid;">'.date("d/m/Y H:i:s").'</td>
         </tr>
         <tr>
-            <td align="left" colspan="3" style="font-size: 10px; border-right-style: solid;">CUIT: 30-71671534-1</td>
+            <td align="left" colspan="3" style="font-size: 10px; border-right-style: solid;">CUIT: 30-11111111</td>
         </tr>
         <tr>
-            <td align="left" colspan="2" width="280"  style="font-size: 10px;; ">Domicilio: Tres Arroyos 895</td>
+            <td align="left" colspan="2" width="280"  style="font-size: 10px;; ">Domicilio: Chacabuco</td>
             <td align="right" width="170" style="font-size: 10px; border-right-style: solid; "><b>ORDEN DE PAGO N° '.$datos['nro_comprobante'].'</b></td>
         </tr>     
         <tr>
@@ -180,20 +180,20 @@ if ($tipoConcepto == 2) {    // Orden de pago
         <tr>
             <td rowspan="3" width="80" style="font-size: 9px; border-top-style: solid; border-left-style: solid;" align="center">
             <div style="padding-top: 80px;">
-                ' . Html::img('@web/images/logo-ecopal.JPG', ['width' => '80px']) . '
+                ' . Html::img('@web/images/logo.png', ['width' => '80px']) . '
             </div>
             </td>
             <td rowspan="3" width="10" style="font-size: 9px; border-top-style: solid;"></td>
-            <td align="left" width="250" style="font-size: 14px; font-weight: bolder; border-top-style: solid;">ECOPAL SRL</td>
+            <td align="left" width="250" style="font-size: 14px; font-weight: bolder; border-top-style: solid;">Gutierrez Hermanos</td>
             <td align="right" width="200" style="font-size: 9px; border-top-style: solid;  border-right-style: solid;">'.date("d/m/Y H:i:s").'</td>
         </tr>
         <tr>
-            <td align="left" width="170" colspan="3" style="font-size: 10px; border-right-style: solid;">CUIT: 30-71671534-1</td>
+            <td align="left" width="170" colspan="3" style="font-size: 10px; border-right-style: solid;">CUIT: 30-6666666-6</td>
             <td align="center" width="30" colspan="3" style="font-size: 17px; border-bottom-style: solid; border-top-style: solid;  border-right-style: solid;"> X</td>
             <td align="left" width="250" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
         </tr>
         <tr>
-            <td align="left" colspan="2" width="165"  style="font-size: 10px;; ">Domicilio: Tres Arroyos 895</td>
+            <td align="left" colspan="2" width="165"  style="font-size: 10px;; ">Domicilio: Chacabuco</td>
             <td align="center" colspan="2" width="40"  style="font-size: 5px;; ">Documento no válido como factura</td>
             <td align="right" width="245" style="font-size: 10px; border-right-style: solid; "><b>RECIBO INTERNO N° '.$datos['nro_comprobante'].'</b></td>
         </tr>     

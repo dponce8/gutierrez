@@ -83,10 +83,6 @@ use app\models\PersonaTipo;
         verPersonas($('#h_tipo_persona').val(), 0);
     }); 
 
-    function mostrarAyuda() {
-        window.open("https://ecopal-cloud.com/ayuda/CuentasCorrientes.pdf", "_blank");
-    }
-
     function mostrarDetalle(id, fila) {
         $.post("index.php?r=site/cuenta-lista&id=" + id + "&sucursal=" + $('#s_sucursal').val(), function (response) {
             jQuery("#d_detalle").html(response);

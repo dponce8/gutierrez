@@ -82,7 +82,4 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <script>
-    function mostrarAyuda() {
-        window.open("https://ecopal-cloud.com/ayuda/Parametros.pdf", "_blank");
-    }
 </script>  

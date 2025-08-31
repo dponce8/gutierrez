@@ -95,10 +95,6 @@
         $(".my-chosen-select").chosen();
     });
 
-    function mostrarAyuda() {
-        window.open("https://ecopal-cloud.com/ayuda/Movimientos.pdf", "_blank");
-    }
-
     function filtrarMovimientos() {
         $.post("index.php?r=caja/movimiento-lista&concepto="+$('#s_concepto_filtro').val()+
         "&persona=" + $('#s_persona_filtro').val()+"&desde=" + $('#desde').val()+
