@@ -77,7 +77,7 @@ use app\models\Persona;
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.post("index.php?r=site/cuenta-ajuste-guarda&id=" + <?=$id?>+"&sucursal=" + $('#s_sucursal').val() +
-                    "&tipo=" + $('#s_tipo_mov').val() +"&importe=" + $('#importe_ajuste').val().replace(/\./g, '').replace(/,/g, '.') +"&obs=" + $('#obs').val() 
+                    "&tipo=" + $('#s_tipo_mov').val() +"&importe=" + $('#importe_ajuste').val() +"&obs=" + $('#obs').val() 
                     , function (response) {
                         jQuery("#d_ajuste_guarda").html(response);
                     });

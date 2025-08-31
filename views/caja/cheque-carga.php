@@ -164,7 +164,7 @@
                     $.post("index.php?r=caja/cheque-guarda&caja=" + $('#s_caja_ch').val() +
                     "&banco=" + $('#s_banco').val() +
                     "&tipo=" + $('#s_tipo').val() +"&persona=" + $('#s_persona_ch').val() +
-                    "&importe=" + $('#importe_ch').val().replace(/\./g, '').replace(/,/g, '.') + "&numero=" + $('#numero').val() +
+                    "&importe=" + $('#importe_ch').val() + "&numero=" + $('#numero').val() +
                     "&obs=" + $('#obs').val() + "&librador="+ $('#librador').val() +
                     "&pago=" + $('#pago').val() + "&formato=" + $('#s_formato').val() +
                     "&orden=" + $('#s_orden').val()+"&fromMov="+$('#h_from_mov').val()

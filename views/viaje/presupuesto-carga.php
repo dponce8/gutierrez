@@ -140,7 +140,7 @@
                     "&destino=" + $('#s_destino').val() +
                     "&direccion_origen=" + $('#direccion_origen').val() +
                     "&direccion_destino=" + $('#direccion_destino').val() +
-                    "&total=" + $('#total').val().replace(/\./g, '').replace(/,/g, '.') +
+                    "&total=" + $('#total').val() +
                     "&obs=" + $('#obs').val() +
                     "&pasajeros=" + $('#pasajeros').val() +
                     "&fecha_vto=" + $('#fecha_vto').val() +

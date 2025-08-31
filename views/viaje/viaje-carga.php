@@ -213,8 +213,8 @@
                     "&coord_destino=" + $('#coord_destino').val() +
                     "&chofer_1=" + $('#s_chofer_1').val() +
                     "&chofer_2=" + $('#s_chofer_2').val() +
-                    "&total=" + $('#total').val().replace(/\./g, '').replace(/,/g, '.') +
-                    "&anticipo=" + $('#anticipo').val().replace(/\./g, '').replace(/,/g, '.') +
+                    "&total=" + $('#total').val() +
+                    "&anticipo=" + $('#anticipo').val() +
                     "&medio=" + $('#s_medio').val() +
                     "&obs=" + $('#obs').val() +
                     "&coche=" + $('#s_coche').val() +
