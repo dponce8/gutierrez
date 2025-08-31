@@ -4,38 +4,38 @@
         <select class="form-control my-chosen-select" id="s_cliente" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Clientes ...</option>
             <?php foreach ($clientes as $p) {?>
-                <option value="<?=$p['id']?>" <?php if ($presupuestos['id_cliente'] == $p['id']) {echo 'selected';}?>><?=$p['apellido'].' '.$p['nombre']?></option>
+                <option value="<?=$p['id']?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['id_cliente'] == $p['id']) {echo 'selected';}?>><?=$p['apellido'].' '.$p['nombre']?></option>
             <?php } ?>
         </select>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Salida</label>
-        <input id="fecha_salida" type="date" class="form-control" value="<?=date("Y-m-d")?>" <?php if ($presupuestos['fecha_salida']) {echo 'value="'.$presupuestos['fecha_salida'].'"';}?>>
+        <input id="fecha_salida" type="date" class="form-control" value="<?=date("Y-m-d")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['fecha_salida']) {echo 'value="'.$presupuestos['fecha_salida'].'"';}?>>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Hora</label>
-        <input id="hora_salida" type="time" class="form-control" value="<?=date("H:i")?>" <?php if ($presupuestos['hora_salida']) {echo 'value="'.$presupuestos['hora_salida'].'"';}?>>
+        <input id="hora_salida" type="time" class="form-control" value="<?=date("H:i")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['hora_salida']) {echo 'value="'.$presupuestos['hora_salida'].'"';}?>>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Regreso</label>
-        <input id="fecha_regreso" type="date" class="form-control" value="<?=date("Y-m-d")?>" <?php if ($presupuestos['fecha_regreso']) {echo 'value="'.$presupuestos['fecha_regreso'].'"';}?>>
+        <input id="fecha_regreso" type="date" class="form-control" value="<?=date("Y-m-d")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['fecha_regreso']) {echo 'value="'.$presupuestos['fecha_regreso'].'"';}?>>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Hora</label>
-        <input id="hora_regreso" type="time" class="form-control" value="<?=date("H:i")?>" <?php if ($presupuestos['hora_regreso']) {echo 'value="'.$presupuestos['hora_regreso'].'"';}?>>
+        <input id="hora_regreso" type="time" class="form-control" value="<?=date("H:i")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['hora_regreso']) {echo 'value="'.$presupuestos['hora_regreso'].'"';}?>>
     </div>
 </div> 
 <div class="row">
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Pasajeros</label>
-        <input id="pasajeros" type="text" class="form-control" <?php if ($presupuestos['pasajeros']) {echo 'value="'.$presupuestos['pasajeros'].'"';}?>>
+        <input id="pasajeros" type="text" class="form-control" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['pasajeros']) {echo 'value="'.$presupuestos['pasajeros'].'"';}?>>
     </div>
     <div class="form-group col-sm-5" style="margin-top: -10px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Origen</label>
         <select class="form-control my-chosen-select" id="s_origen" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Origen ...</option>
             <?php foreach ($localidades as $p) {?>
-                <option value="<?=$p['idlocalidad']?>" <?php if ($presupuestos['origen'] == $p['idlocalidad']) {echo 'selected';}?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
+                <option value="<?=$p['idlocalidad']?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['origen'] == $p['idlocalidad']) {echo 'selected';}?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
             <?php } ?>
         </select>
     </div>
@@ -44,7 +44,7 @@
         <select class="form-control my-chosen-select" id="s_destino" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Destino ...</option>
             <?php foreach ($localidades as $p) {?>
-                <option value="<?=$p['idlocalidad']?>" <?php if ($presupuestos['destino'] == $p['idlocalidad']) {echo 'selected';}?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
+                <option value="<?=$p['idlocalidad']?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['destino'] == $p['idlocalidad']) {echo 'selected';}?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
             <?php } ?>
         </select>
     </div>
@@ -52,7 +52,7 @@
 <div class="row">
     <div class="form-group col-sm-4" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Dirección Origen</label>
-        <input id="direccion_origen" type="text" class="form-control" <?php if ($presupuestos['direccion_origen']) {echo 'value="'.$presupuestos['direccion_origen'].'"';}?>>
+        <input id="direccion_origen" type="text" class="form-control" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['direccion_origen']) {echo 'value="'.$presupuestos['direccion_origen'].'"';}?>>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Coordenadas</label>
@@ -60,7 +60,7 @@
     </div>
     <div class="form-group col-sm-4" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Dirección Destino</label>
-        <input id="direccion_destino" type="text" class="form-control" <?php if ($presupuestos['direccion_destino']) {echo 'value="'.$presupuestos['direccion_destino'].'"';}?>>
+        <input id="direccion_destino" type="text" class="form-control" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['direccion_destino']) {echo 'value="'.$presupuestos['direccion_destino'].'"';}?>>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Coordenadas</label>
@@ -110,7 +110,7 @@
 <div class="row">
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Total Viaje</label>
-        <input id="total" type="text" class="form-control" <?php if ($presupuestos['total']) {echo 'value="'.$presupuestos['total'].'"';}?>>
+        <input id="total" type="text" class="form-control" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['total']) {echo 'value="'.$presupuestos['total'].'"';}?>>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Anticipo</label>
