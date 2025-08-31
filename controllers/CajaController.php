@@ -494,17 +494,7 @@ class CajaController extends \yii\web\Controller
         ->bindValue(':id', $idMov)
         ->queryAll();
 
-
-        $facturas = $db->createCommand("select f.*, concat(u.apellido,' ',u.nombre) usuario, t.tipo
-        from factura f
-        join user u on u.id = f.id_usuario
-        join movimiento_factura mf on mf.id_factura = f.id 
-        left join factura_tipo t on t.id = f.id_tipo
-        where mf.id_movimiento = :id order by fecha desc")
-        ->bindValue(':id', $idMov)
-        ->queryAll();
-
-        return $this->renderPartial('movimiento-medio-lista',['listado' =>$listado, 'facturas' =>$facturas]);
+        return $this->renderPartial('movimiento-medio-lista',['listado' =>$listado]);
     }
 
     public function actionMovimientoImprime($id)
