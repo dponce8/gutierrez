@@ -592,14 +592,10 @@ class CajaController extends \yii\web\Controller
         if ($concepto == 3) {
             $personas = $db->createCommand("select id,concat(apellido,' ',nombre) persona from persona where id_tipo_persona in (2) order by apellido, nombre")->queryAll();
         } else {
-            if ($concepto == 4) {
+            if ($concepto == 1 || $concepto == 2) {
                 $personas = $db->createCommand("select id,concat(apellido,' ',nombre) persona from persona where id_tipo_persona = 1 order by apellido, nombre")->queryAll();
             } else {
-                if ($concepto == 7) {
-                    $personas = $db->createCommand("select id,concat(apellido,' ',nombre) persona from persona where id_tipo_persona = 3 order by apellido, nombre")->queryAll();
-                } else {
-                    $personas = $db->createCommand("select id,concat(apellido,' ',nombre) persona from persona order by apellido, nombre")->queryAll();
-                }
+                $personas = $db->createCommand("select id,concat(apellido,' ',nombre) persona from persona order by apellido, nombre")->queryAll();
             }
         }
         return $this->renderPartial('movimiento-persona',['personas' =>$personas]);
