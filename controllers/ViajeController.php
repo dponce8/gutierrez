@@ -213,7 +213,7 @@ class ViajeController extends \yii\web\Controller
         order by pa.pais, p.provincia, l.localidad")
         ->queryAll();
 
-        $presupuestos = $db->createCommand("select * from presupuesto where id_cliente = :id")
+        $presupuestos = $db->createCommand("select * from presupuesto where id = :id")
         ->bindValue(':id', $id)
         ->queryOne();
 
