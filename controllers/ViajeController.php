@@ -205,7 +205,7 @@ class ViajeController extends \yii\web\Controller
         $choferes = $db->createCommand("select idempleado, concat(apellido,' ',nombre) as chofer from empleados where idtipoempleado = 2 order by apellido, nombre")->queryAll();
         $medios = $db->createCommand("select id, medio from medio_pago order by id")->queryAll();
         $coches = $db->createCommand("select id, numero_interno, asientos from vehiculo order by numero_interno")->queryAll();
-        $empresas = $db->createCommand("select * from SueldosEmpresas")->queryAll();
+        $empresas = $db->createCommand("select * from sueldosempresas")->queryAll();
         $localidades = $db->createCommand("select l.localidad, p.provincia, pa.pais, l.idlocalidad
         from localidades l 
         join provincia p on p.id = l.id_provincia
