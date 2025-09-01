@@ -78,6 +78,100 @@ class ViajeController extends \yii\web\Controller
             $pasajeros = $request->get('pasajeros');
             $empresa = $request->get('empresa');
 
+            // VALIDACIONES DE DISPONIBILIDAD
+            $errores = [];
+            
+            // Verificar disponibilidad del vehículo
+            if (!empty($coche) && $coche > 0) {
+                $vehiculoOcupado = $db->createCommand("
+                    SELECT COUNT(*) as ocupado 
+                    FROM viaje 
+                    WHERE id_vehiculo = :vehiculo 
+                    AND (
+                        -- El nuevo viaje inicia durante un viaje existente
+                        (DATE(:fecha_salida) >= DATE(fecha_salida) AND DATE(:fecha_salida) <= DATE(fecha_regreso))
+                        OR 
+                        -- El nuevo viaje termina durante un viaje existente
+                        (DATE(:fecha_regreso) >= DATE(fecha_salida) AND DATE(:fecha_regreso) <= DATE(fecha_regreso))
+                        OR
+                        -- El nuevo viaje engloba completamente un viaje existente
+                        (DATE(:fecha_salida) < DATE(fecha_salida) AND DATE(:fecha_regreso) > DATE(fecha_regreso))
+                    )
+                ")
+                ->bindValue(':vehiculo', $coche)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->queryScalar();
+                
+                if ($vehiculoOcupado > 0) {
+                    $errores[] = "El vehículo seleccionado ya está asignado a otro viaje en las fechas indicadas.";
+                }
+            }
+            
+            // Verificar disponibilidad del chofer 1
+            if (!empty($chofer_1) && $chofer_1 > 0) {
+                $chofer1Ocupado = $db->createCommand("
+                    SELECT COUNT(*) as ocupado 
+                    FROM viaje 
+                    WHERE (id_chofer_1 = :chofer OR id_chofer_2 = :chofer)
+                    AND (
+                        -- El nuevo viaje inicia durante un viaje existente
+                        (DATE(:fecha_salida) >= DATE(fecha_salida) AND DATE(:fecha_salida) <= DATE(fecha_regreso))
+                        OR 
+                        -- El nuevo viaje termina durante un viaje existente
+                        (DATE(:fecha_regreso) >= DATE(fecha_salida) AND DATE(:fecha_regreso) <= DATE(fecha_regreso))
+                        OR
+                        -- El nuevo viaje engloba completamente un viaje existente
+                        (DATE(:fecha_salida) < DATE(fecha_salida) AND DATE(:fecha_regreso) > DATE(fecha_regreso))
+                    )
+                ")
+                ->bindValue(':chofer', $chofer_1)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->queryScalar();
+                
+                if ($chofer1Ocupado > 0) {
+                    $errores[] = "El primer chofer seleccionado ya está asignado a otro viaje en las fechas indicadas.";
+                }
+            }
+            
+            // Verificar disponibilidad del chofer 2
+            if (!empty($chofer_2) && $chofer_2 > 0) {
+                $chofer2Ocupado = $db->createCommand("
+                    SELECT COUNT(*) as ocupado 
+                    FROM viaje 
+                    WHERE (id_chofer_1 = :chofer OR id_chofer_2 = :chofer)
+                    AND (
+                        -- El nuevo viaje inicia durante un viaje existente
+                        (DATE(:fecha_salida) >= DATE(fecha_salida) AND DATE(:fecha_salida) <= DATE(fecha_regreso))
+                        OR 
+                        -- El nuevo viaje termina durante un viaje existente
+                        (DATE(:fecha_regreso) >= DATE(fecha_salida) AND DATE(:fecha_regreso) <= DATE(fecha_regreso))
+                        OR
+                        -- El nuevo viaje engloba completamente un viaje existente
+                        (DATE(:fecha_salida) < DATE(fecha_salida) AND DATE(:fecha_regreso) > DATE(fecha_regreso))
+                    )
+                ")
+                ->bindValue(':chofer', $chofer_2)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->queryScalar();
+                
+                if ($chofer2Ocupado > 0) {
+                    $errores[] = "El segundo chofer seleccionado ya está asignado a otro viaje en las fechas indicadas.";
+                }
+            }
+            
+            // Si hay errores, no continuar con la inserción
+            if (!empty($errores)) {
+                $transaction->rollBack();
+                return json_encode([
+                    'success' => false,
+                    'errores' => $errores,
+                    'mensaje' => 'No se puede guardar el viaje debido a conflictos de asignación.'
+                ]);
+            }
+
             $db->createCommand("insert into viaje (id_cliente,fecha, fecha_salida, hora_salida, fecha_regreso, hora_regreso, origen, destino, 
             direccion_origen, direccion_destino, coord_origen, coord_destino, id_chofer_1, id_chofer_2, total, anticipo, obs, id_usuario,
             id_vehiculo, pasajeros, id_empresa) 
@@ -152,6 +246,13 @@ class ViajeController extends \yii\web\Controller
             }
 
             $transaction->commit();
+            
+            // Respuesta exitosa
+            return json_encode([
+                'success' => true,
+                'mensaje' => 'Viaje guardado exitosamente.',
+                'viaje_id' => $idViaje
+            ]);
         }
 
         $per1 = $idPersona; $per2 = $idPersona;
@@ -434,6 +535,60 @@ class ViajeController extends \yii\web\Controller
         return $this->renderPartial('viaje-presupuesto-lista', ['listado' => $listado]);
     } 
 
-    
+    public function actionVehiculo()
+    {
+        $db = Yii::$app->db;
+        $coches = $db->createCommand("select id, numero_interno, asientos from vehiculo order by numero_interno")->queryAll();
+
+        return $this->render('vehiculo', ['coches' => $coches]);
+    }
+
+    public function actionVehiculoLista($idCoche, $mes, $periodo)
+    {
+        $db = Yii::$app->db;
+
+        // Crear las fechas de inicio y fin del mes consultado
+        $fechaInicioMes = $db->createCommand("SELECT DATE('$periodo-$mes-01')")->queryScalar();
+        $fechaFinMes = $db->createCommand("SELECT LAST_DAY('$periodo-$mes-01')")->queryScalar();
+        
+        // Construir la consulta base
+        $sql = "
+            SELECT v.id, v.fecha_salida, v.fecha_regreso, vh.numero_interno, vh.id as vehiculo_id,
+                   DATE_FORMAT(v.fecha_salida, '%d/%m/%Y') as fecha_salida_formatted,
+                   DATE_FORMAT(v.fecha_regreso, '%d/%m/%Y') as fecha_regreso_formatted
+            FROM viaje v
+            JOIN vehiculo vh ON vh.id = v.id_vehiculo
+            WHERE 1=1 ";
+        
+        // Si idCoche es 0, mostrar todos los vehículos, sino filtrar por vehículo específico
+        if ($idCoche != 0) {
+            $sql .= " AND v.id_vehiculo = :idCoche ";
+        }
+        
+        $sql .= " AND (
+                -- El viaje inicia en el mes consultado
+                (DATE(v.fecha_salida) >= :fechaInicio AND DATE(v.fecha_salida) <= :fechaFin)
+                OR 
+                -- El viaje termina en el mes consultado  
+                (DATE(v.fecha_regreso) >= :fechaInicio AND DATE(v.fecha_regreso) <= :fechaFin)
+                OR
+                -- El viaje cruza todo el mes (inicia antes y termina después)
+                (DATE(v.fecha_salida) < :fechaInicio AND DATE(v.fecha_regreso) > :fechaFin)
+            )
+            ORDER BY vh.numero_interno ASC, v.fecha_salida ASC
+        ";
+        
+        $command = $db->createCommand($sql)
+            ->bindValue(':fechaInicio', $fechaInicioMes)
+            ->bindValue(':fechaFin', $fechaFinMes);
+        
+        // Solo agregar el bind del idCoche si no es "todos"
+        if ($idCoche != 0) {
+            $command->bindValue(':idCoche', $idCoche);
+        }
+        
+        $vehiculos = $command->queryAll();
+        return $this->renderPartial('vehiculo-lista', ['vehiculos' => $vehiculos]);
+    }
 
 }

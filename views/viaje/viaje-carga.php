@@ -154,6 +154,19 @@
         if ($('#hora_regreso').val() == '') {
             goOn = 0; mensaje = "Seleccione Hora de Regreso.<br>"; 
         }
+        
+        // Validar que fecha/hora de regreso sea posterior a fecha/hora de salida
+        if ($('#fecha_salida').val() != '' && $('#hora_salida').val() != '' && 
+            $('#fecha_regreso').val() != '' && $('#hora_regreso').val() != '') {
+            
+            var fechaHoraSalida = new Date($('#fecha_salida').val() + 'T' + $('#hora_salida').val());
+            var fechaHoraRegreso = new Date($('#fecha_regreso').val() + 'T' + $('#hora_regreso').val());
+            
+            if (fechaHoraRegreso <= fechaHoraSalida) {
+                goOn = 0; 
+                mensaje += "La fecha y hora de regreso debe ser posterior a la fecha y hora de salida.<br>";
+            }
+        }
         if ($('#s_coche').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione Coche.<br>"; 
         }
@@ -222,7 +235,56 @@
                     "&empresa=" + $('#s_empresa').val() +
                     "&guardar=1"
                     , function (response) {
-                        jQuery("#d_viaje_lista").html(response);
+                        try {
+                            // Intentar parsear como JSON primero
+                            var resultado = JSON.parse(response);
+                            
+                            if (resultado.success === false) {
+                                // Mostrar errores de validación
+                                var mensajeErrores = '<ul>';
+                                resultado.errores.forEach(function(error) {
+                                    mensajeErrores += '<li>' + error + '</li>';
+                                });
+                                mensajeErrores += '</ul>';
+                                
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error al Guardar Viaje',
+                                    html: resultado.mensaje + '<br><br><strong>Detalles:</strong>' + mensajeErrores,
+                                    confirmButtonText: 'Entendido'
+                                });
+                            } else if (resultado.success === true) {
+                                // Viaje guardado exitosamente
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Viaje Guardado',
+                                    text: resultado.mensaje,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    // Cerrar modal y actualizar lista
+                                    $('#movModal').modal('hide');
+                                    // Actualizar la lista de viajes
+                                    $.post("index.php?r=viaje/viaje-lista&idPersona=" + $("#s_persona_filtro").val() + "&desde=" + $("#desde").val() + "&hasta=" + $("#hasta").val(), function (response) {
+                                        jQuery("#d_viaje_lista").html(response);
+                                    });
+                                });
+                            }
+                        } catch (e) {
+                            // Si no es JSON, es la respuesta HTML normal (para compatibilidad)
+                            jQuery("#d_viaje_lista").html(response);
+                            
+                            // Mostrar mensaje de éxito genérico
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Viaje Guardado',
+                                text: 'El viaje se ha guardado correctamente.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                $('#movModal').modal('hide');
+                            });
+                        }
                     });                    
                 }
             })

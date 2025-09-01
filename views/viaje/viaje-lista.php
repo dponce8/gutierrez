@@ -9,6 +9,8 @@
             <th style="font-size: 10px; font-weight: bold">Origen</th>
             <th style="font-size: 10px; font-weight: bold">Destino</th>
             <th style="font-size: 10px; font-weight: bold">Pasajeros</th>
+            <th style="font-size: 10px; font-weight: bold">Salida</th>
+            <th style="font-size: 10px; font-weight: bold">Regreso</th>
             <th style="font-size: 10px; font-weight: bold">Empresa</th>
             <th style="font-size: 10px; font-weight: bold">Coche</th>
             <th style="font-size: 10px; font-weight: bold">Total</th>
@@ -33,6 +35,8 @@
                 <td><?= $m['local_origen']?></td>
                 <td><?= $m['local_destino']?></td>
                 <td><?= $m['pasajeros']?></td>
+                <td><?= date("d/m/Y",strtotime($m['fecha_salida'])).' '.$m['hora_salida']?></td>
+                <td><?= date("d/m/Y",strtotime($m['fecha_regreso'])).' '.$m['hora_regreso']?></td>
                 <td><?= $m['empresa']?></td>
                 <td><?= $m['coche']?></td>
                 <td><?= $m['total']?></td>
