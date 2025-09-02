@@ -35,6 +35,7 @@ class Persona extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['id_localidad', 'id_provincia'], 'required'],
             [['id_localidad', 'id_provincia', 'id_tipo_persona'], 'integer'],
             [['apellido', 'nombre'], 'string', 'max' => 145],
             [['cuit'], 'string', 'max' => 13],

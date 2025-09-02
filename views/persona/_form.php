@@ -47,7 +47,9 @@ use yii\helpers\ArrayHelper;
         </div>    
 
         <div class="col-sm-4">
-            <?= $form->field($model, 'id_localidad')->dropDownList([])  ?>
+            <?= $form->field($model, 'id_localidad')->dropDownList([], [
+                'prompt' => Yii::t('app','Seleccione Localidad')
+            ])->label('Localidad')  ?>
         </div>    
     </div>  
 
