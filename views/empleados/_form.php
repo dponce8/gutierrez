@@ -74,7 +74,7 @@ use app\models\Localidades;
 
     <div class="form-group">
         <?= Html::submitButton('Guardar', ['class' => 'btn btn-success']) ?>
-        <?= Html::a('Volver', ['index', 'IdEmpleado' => $model->IdEmpleado], ['class' => 'btn btn-warning']) ?>
+        <?= Html::a('Volver', ['index'], ['class' => 'btn btn-warning']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

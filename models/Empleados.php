@@ -41,7 +41,6 @@ class Empleados extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['IdEmpleado'], 'required'],
             [['IdEmpleado', 'NroDoc', 'IdTipoEmpleado', 'Legajo', 'IdLocalidad', 'IdCondicion', 'IdCargo', 'IdEmpresa', 'IdJornada'], 'integer'],
             [['FechaIngreso'], 'safe'],
             [['Contribucion', 'Aportes'], 'number'],
