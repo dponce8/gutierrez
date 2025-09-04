@@ -16,7 +16,7 @@ $tbl =
     </tr>
     <tr>
         <td align="left" width="100" style="font-size: 10px;">Fecha: </td>
-        <td align="left" width="430" style="font-size: 10px; font-weight: bold;">' . date("d/mY") . '</td>
+        <td align="left" width="430" style="font-size: 10px; font-weight: bold;">' . date("d/m/Y") . '</td>
     </tr>
     <tr>
         <td align="left" width="100" style="font-size: 10px;">Razón Social: </td>
@@ -115,7 +115,7 @@ $tbl =
         <td align="left" width="150" style="font-size: 10px;;"> </td>
     </tr>
     <tr>
-        <td align="center" width="530" style="font-size: 10px; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">PRECIO FINAL (IVA NO INCLUIDO)</td>
+        <td align="center" width="530" style="font-size: 10px; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">PRECIO FINAL</td>
     </tr>
     <tr>
         <td align="center" width="530" style="font-size: 12px; font-weight: bold; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">' . number_format($datos['total'], 2, ',', '.')  . '</td>
