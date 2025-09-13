@@ -10,19 +10,19 @@
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Salida</label>
-        <input id="fecha_salida" type="date" class="form-control" value="<?=date("Y-m-d")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['fecha_salida']) {echo 'value="'.$presupuestos['fecha_salida'].'"';}?>>
+        <input id="fecha_salida" type="date" class="form-control" value="<?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['fecha_salida']) {echo date("Y-m-d",strtotime($presupuestos['fecha_salida']));} else {echo date("Y-m-d");} ?>" >
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Hora</label>
-        <input id="hora_salida" type="time" class="form-control" value="<?=date("H:i")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['hora_salida']) {echo 'value="'.$presupuestos['hora_salida'].'"';}?>>
+        <input id="hora_salida" type="time" class="form-control" value="<?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['hora_salida']) {echo $presupuestos['hora_salida'];} else {echo date("H:i");} ?>" >
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Regreso</label>
-        <input id="fecha_regreso" type="date" class="form-control" value="<?=date("Y-m-d")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['fecha_regreso']) {echo 'value="'.$presupuestos['fecha_regreso'].'"';}?>>
+        <input id="fecha_regreso" type="date" class="form-control" value="<?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['fecha_regreso']) {echo date("Y-m-d",strtotime($presupuestos['fecha_regreso']));} else {echo date("Y-m-d");} ?>" >
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Hora</label>
-        <input id="hora_regreso" type="time" class="form-control" value="<?=date("H:i")?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['hora_regreso']) {echo 'value="'.$presupuestos['hora_regreso'].'"';}?>>
+        <input id="hora_regreso" type="time" class="form-control" value="<?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['hora_regreso']) {echo $presupuestos['hora_regreso'];} else {echo date("H:i");} ?>" >
     </div>
 </div> 
 <div class="row">
@@ -185,9 +185,9 @@
         if ($('#s_chofer_1').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione 1° Chofer.<br>"; 
         }
-        if ($('#s_chofer_2').val() == 0) {
+        /*if ($('#s_chofer_2').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione 2° Chofer.<br>"; 
-        }
+        }*/
         if ($('#total').val() == '') {
             goOn = 0; mensaje = mensaje + "Ingrese Total Viaje.<br>"; 
         }

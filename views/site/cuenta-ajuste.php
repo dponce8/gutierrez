@@ -5,7 +5,7 @@ use app\models\Persona;
 <div class="row" style="padding-left: 5px; padding-right: 5px;">
     <div class="form-group col-sm-4" style="margin-top: -10px;">
         <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Seleccione Empresa</label>
-        <select class="form-control" id="s_sucursal" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <select class="form-control" id="s_sucursal_ajuste" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Empresas ...</option>
             <?php foreach ($sucursales as $s) {?>
                 <option value="<?=$s['idEmpresa']?>"><?=$s['Empresa']?></option>
@@ -55,8 +55,8 @@ use app\models\Persona;
         var goOn =1;
         var mensaje = "";
 
-        if ($('#s_sucursal').val() == 0) {
-            goOn = 0; mensaje = "Seleccione Sucursal.<br>"; 
+        if ($('#s_sucursal_ajuste').val() == 0) {
+            goOn = 0; mensaje = "Seleccione Empresa.<br>"; 
         }
         if ($('#s_tipo_mov').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione Ajuste.<br>"; 
@@ -76,7 +76,7 @@ use app\models\Persona;
                 confirmButtonText: 'Cargar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post("index.php?r=site/cuenta-ajuste-guarda&id=" + <?=$id?>+"&sucursal=" + $('#s_sucursal').val() +
+                    $.post("index.php?r=site/cuenta-ajuste-guarda&id=" + <?=$id?>+"&sucursal=" + $('#s_sucursal_ajuste').val() +
                     "&tipo=" + $('#s_tipo_mov').val() +"&importe=" + $('#importe_ajuste').val() +"&obs=" + $('#obs').val() 
                     , function (response) {
                         jQuery("#d_ajuste_guarda").html(response);

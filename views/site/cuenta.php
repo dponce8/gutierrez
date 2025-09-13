@@ -23,6 +23,15 @@ use app\models\PersonaTipo;
               <?php } ?>
           </select>
       </div>
+      <div class="form-group col-sm-3" style="margin-top: -10px;">
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Persona</label>
+        <select class="form-control my-chosen-select" id="s_persona" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+            <option value="0">Todas ...</option>
+            <?php foreach ($personas as $p) {?>
+                <option value="<?=$p['id']?>"><?=$p['apellido'].' '.$p['nombre']?></option>
+            <?php } ?>
+        </select>
+    </div>
       <div class="form-group col-sm-1" style="margin-top: 8px;">        
           <button type="button" title="Actualizar" class="btn btn-primary float-right" style="width: 38px; margin-right: 8px;" onClick="verPersonas(<?=$tipo?>, 0)"><i class="fa fa-refresh"></i></button>
       </div>
@@ -92,7 +101,8 @@ use app\models\PersonaTipo;
     }
 
     function verPersonas(tipo, fila) {
-        $.post("index.php?r=site/cuenta-persona&tipo="+tipo+"&fila="+fila+"&sucursal="+$('#s_sucursal').val(), function (response) {
+      document.getElementById("d_cuenta_persona").innerHTML="";
+        $.post("index.php?r=site/cuenta-persona&tipo="+tipo+"&fila="+fila+"&sucursal="+$('#s_sucursal').val()+"&idPersona="+$('#s_persona').val(), function (response) {
             jQuery("#d_cuenta_persona").html(response);
         });
         $('#d_detalle').html('');
@@ -156,6 +166,6 @@ use app\models\PersonaTipo;
     }
 
     function exportarPDF() {
-        window.open("index.php?r=site/cuenta-persona-imprime&tipo=" + $('#h_tipo_persona').val() + "&sucursal=" + $('#s_sucursal').val(), "_blank");
+        window.open("index.php?r=site/cuenta-persona-imprime&tipo=" + $('#h_tipo_persona').val() + "&sucursal=" + $('#s_sucursal').val() + "&idPersona=" + $('#s_persona').val(), "_blank");
     }
 </script>

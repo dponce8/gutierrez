@@ -192,16 +192,25 @@ class SiteController extends Controller
 
     public function actionCuenta($tipo)
     {
+        $db = Yii::$app->db;
+
+        $personas = $db->createCommand("select * from persona where id_tipo_persona = :tipo order by apellido,nombre")
+        ->bindValue(':tipo', $tipo)
+        ->queryAll();
+
         $sucursales = Sueldosempresas::find()->orderBy("Empresa")->all();
-        return $this->render('cuenta',['tipo' => $tipo, 'sucursales' => $sucursales]);
+        return $this->render('cuenta',['tipo' => $tipo, 'sucursales' => $sucursales, 'personas' => $personas]);
     }
 
-    public function actionCuentaPersona($tipo, $fila, $sucursal)
+    public function actionCuentaPersona($tipo, $fila, $sucursal, $idPersona)
     {
         $db = Yii::$app->db;
         $suc1 = $sucursal;
         $suc2 = $sucursal;
+        $per1 = $idPersona;
+        $per2 = $idPersona;
         if ($sucursal == 0) {$suc1 = 1; $suc2 = 9;}
+        if ($idPersona == 0) {$per1 = 0; $per2 = 9999;}
 
         $personas = $db->createCommand("select p.id,concat(p.apellido,' ', p.nombre) nombrePersona,
         case when max(pm1.importe) is not null then max(pm1.importe) else 0 end compra, 
@@ -210,22 +219,23 @@ class SiteController extends Controller
         case when max(pm2.importe) is not null then max(pm2.importe) else 0 end saldo
         from persona p 
         left join (select sum(m.importe) importe, m.id_persona 
-        from persona_movimiento m
-        join persona_movimiento_tipo t on t.id = m.id_movimiento_tipo
-        where t.debe = 1 and m.id_empresa between :suc1 and :suc2 group by id_persona)
-        pm1 on pm1.id_persona = p.id 
+            from persona_movimiento m
+            join persona_movimiento_tipo t on t.id = m.id_movimiento_tipo
+            where t.debe = 1 and m.id_empresa between :suc1 and :suc2 group by id_persona)
+            pm1 on pm1.id_persona = p.id and p.id between :per1 and :per2
         left join (select sum(m.importe) importe, m.id_persona 
-        from persona_movimiento m
-        join persona_movimiento_tipo t on t.id = m.id_movimiento_tipo
-        where t.debe = 0 and m.id_empresa between :suc1 and :suc2 group by id_persona)
-        pm2 on pm2.id_persona = p.id 
-        where p.id_tipo_persona = :tipo and pm1.importe > 0 or pm2.importe > 0
-        group by p.id,p.apellido, p.nombre
-        
+            from persona_movimiento m
+            join persona_movimiento_tipo t on t.id = m.id_movimiento_tipo
+            where t.debe = 0 and m.id_empresa between :suc1 and :suc2 group by id_persona)
+            pm2 on pm2.id_persona = p.id and p.id between :per1 and :per2
+        where p.id_tipo_persona = :tipo and pm1.importe > 0 or pm2.importe > 0 
+        group by p.id,p.apellido, p.nombre        
         order by nombrePersona;")
         ->bindValue(':tipo', $tipo)
         ->bindValue(':suc1', $suc1)
         ->bindValue(':suc2', $suc2)
+        ->bindValue(':per1', $per1)
+        ->bindValue(':per2', $per2)
         ->queryAll();
 
         return $this->renderPartial('cuenta-persona',['personas' => $personas, 'tipo' => $tipo, 'fila' => $fila]);
@@ -432,12 +442,15 @@ class SiteController extends Controller
         return $this->renderPartial('cuenta-gral-excel',['personas' => $personas, 'tipoPersona' => $tipoPersona, 'sucursal' => $sucursal]);
     }
 
-    public function actionCuentaPersonaImprime($tipo, $sucursal)
+    public function actionCuentaPersonaImprime($tipo, $sucursal, $idPersona)
     {
         $db = Yii::$app->db;
         $suc1 = $sucursal;
         $suc2 = $sucursal;
         if ($sucursal == 0) {$suc1 = 1; $suc2 = 9;}
+        $per1 = $idPersona;
+        $per2 = $idPersona;
+        if ($idPersona == 0) {$per1 = 0; $per2 = 9999;}
 
         $personas = $db->createCommand("select p.id,concat(p.apellido,' ', p.nombre) nombrePersona,
         case when max(pm1.importe) is not null then max(pm1.importe) else 0 end compra, 
@@ -448,17 +461,19 @@ class SiteController extends Controller
         left join (select sum(m.importe) importe, m.id_persona from persona_movimiento m
         join persona_movimiento_tipo t on t.id = m.id_movimiento_tipo
         where t.debe = 1 and m.id_empresa between :suc1 and :suc2 group by id_persona)
-        pm1 on pm1.id_persona = p.id 
+        pm1 on pm1.id_persona = p.id and p.id between :per1 and :per2
         left join (select sum(m.importe) importe, m.id_persona from persona_movimiento m
         join persona_movimiento_tipo t on t.id = m.id_movimiento_tipo
         where t.debe = 0 and m.id_empresa between :suc1 and :suc2 group by id_persona)
-        pm2 on pm2.id_persona = p.id 
-        where p.id_tipo_persona = :tipo and pm1.importe > 0 or pm2.importe > 0
+        pm2 on pm2.id_persona = p.id and p.id between :per1 and :per2
+        where p.id_tipo_persona = :tipo and pm1.importe > 0 or pm2.importe > 0 
         group by p.id,p.apellido, p.nombre
         order by nombrePersona;")
         ->bindValue(':tipo', $tipo)
         ->bindValue(':suc1', $suc1)
         ->bindValue(':suc2', $suc2)
+        ->bindValue(':per1', $per1)
+        ->bindValue(':per2', $per2)
         ->queryAll();
 
         require_once('../vendor/tcpdf/tcpdf.php');

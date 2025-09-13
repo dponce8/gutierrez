@@ -10,11 +10,11 @@
 
 <div class="row" style="padding-top: 15px; padding-left: 5px; padding-right: 5px;">
     <div class="form-group col-sm-2" style="margin-top: -10px;">
-        <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Filtar por Caja</label>
+        <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Filtar por Empresa</label>
         <select class="form-control" id="s_caja_filtro" onChange="filtrarCheques()" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
-            <option value="0">Cualquier Caja ...</option>
+            <option value="0">Cualquier Empresa ...</option>
             <?php foreach ($cajas as $s) {?>
-                <option value="<?=$s['id']?>"><?=$s['caja']?></option>
+                <option value="<?=$s['idEmpresa']?>"><?=$s['Empresa']?></option>
             <?php } ?>
         </select>
     </div>

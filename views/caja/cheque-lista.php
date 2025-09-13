@@ -3,7 +3,7 @@
         <thead class="table-dark">
         <tr style="font-size: 10px;">
             <th style="font-size: 10px; font-weight: bold">#</th>
-            <th style="font-size: 10px; font-weight: bold">Caja</th>
+            <th style="font-size: 10px; font-weight: bold">Empresa</th>
             <th style="font-size: 10px; font-weight: bold">Tipo</th>
             <th style="font-size: 10px; font-weight: bold"></th>
             <th style="font-size: 10px; font-weight: bold">Nro. Cheque</th>
@@ -27,7 +27,7 @@
         <?php $c =1; foreach ($listado as $m) { ?>
             <tr class="table-light">
                 <td><?= $c ?></td>
-                <td><?= $m['caja']?></td>
+                <td><?= $m['Empresa']?></td>
                 <td><?= $m['tipo']?></td>
                 <td width="30" class="text-center">
                     <a style="color: blue; font-size: 17px;" title="Ver Info" href="javascript:infoCheque(<?= $m['id']?>)"><i class="fa fa-info-circle"></i></a>

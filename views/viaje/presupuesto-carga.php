@@ -69,7 +69,7 @@
         <label style="font-size: 11px; ">Fecha Vto</label>
         <input id="fecha_vto" type="date" class="form-control" value="<?=date("Y-m-d")?>">
     </div>
-    <div class="form-group col-sm-9" style="margin-top: -10px; ">
+    <div class="form-group col-sm-8" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Observaciones</label>
         <input id="obs" type="text" class="form-control">
     </div>

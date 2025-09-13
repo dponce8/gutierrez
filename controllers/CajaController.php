@@ -247,7 +247,7 @@ class CajaController extends \yii\web\Controller
     {
         $db = Yii::$app->db;
         $bancos = $db->createCommand("select * from banco")->queryAll();
-        $cajas = $db->createCommand("select * from caja")->queryAll();
+        $cajas = $db->createCommand("select * from sueldosempresas")->queryAll();
         $personas = $db->createCommand("select id,concat(apellido,' ',nombre) persona from persona order by apellido, nombre")->queryAll();
         $tipos = $db->createCommand("select * from cheque_tipo")->queryAll();
         $estados = $db->createCommand("select * from cheque_estado")->queryAll();
@@ -308,8 +308,7 @@ class CajaController extends \yii\web\Controller
 
                 $infoCheque = $db->createCommand("select * from cheque where id = :id")->bindValue(':id', $id)->queryOne();
 
-                // Cargar movimiento par aumentar el saldo de la cuenta
-                
+                // Cargar movimiento par aumentar el saldo de la cuenta                
 
                 $tipoConcepto = Concepto::findOne(['id' => 16])->id_tipo;
                 $nroRecibo = self::getNroComprobante($tipoConcepto);    
@@ -343,12 +342,12 @@ class CajaController extends \yii\web\Controller
         }
 
         $listado = $db->createCommand("
-        select c.*, t.tipo, ca.caja, concat(p.apellido,' ',p.nombre) persona, b.banco,
+        select c.*, t.tipo, ca.Empresa, concat(p.apellido,' ',p.nombre) persona, b.banco,
         concat(u.apellido,' ',u.nombre) usuario, e.estado, DATE_ADD(c.fecha_pago, INTERVAL 1 month) fecha_vto,
         ce.formato, co.tipo ordenNombre, bc.cuenta
         from cheque c
         join cheque_tipo t on t.id = c.id_tipo
-        join caja ca on ca.id = c.id_caja
+        join sueldosempresas ca on ca.idEmpresa = c.id_caja
         left join persona p on p.id = c.id_persona
         join banco b on b.id = c.id_banco
         join cheque_estado e on e.id = c.id_estado
