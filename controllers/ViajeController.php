@@ -555,9 +555,12 @@ class ViajeController extends \yii\web\Controller
         $sql = "
             SELECT v.id, v.fecha_salida, v.fecha_regreso, vh.numero_interno, vh.id as vehiculo_id,
                    DATE_FORMAT(v.fecha_salida, '%d/%m/%Y') as fecha_salida_formatted,
-                   DATE_FORMAT(v.fecha_regreso, '%d/%m/%Y') as fecha_regreso_formatted
+                   DATE_FORMAT(v.fecha_regreso, '%d/%m/%Y') as fecha_regreso_formatted,
+                   v.hora_salida, v.hora_regreso,lo.localidad local_origen, ld.localidad local_destino
             FROM viaje v
             JOIN vehiculo vh ON vh.id = v.id_vehiculo
+            left join localidades lo on lo.idlocalidad = v.origen
+            left join localidades ld on ld.idlocalidad = v.destino
             WHERE 1=1 ";
         
         // Si idCoche es 0, mostrar todos los vehículos, sino filtrar por vehículo específico

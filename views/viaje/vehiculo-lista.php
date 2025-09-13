@@ -58,6 +58,10 @@ foreach ($vehiculos as $viaje) {
             'numero_interno' => $viaje['numero_interno'],
             'fecha_salida' => $viaje['fecha_salida_formatted'],
             'fecha_regreso' => $viaje['fecha_regreso_formatted'],
+            'hora_salida' => isset($viaje['hora_salida']) ? $viaje['hora_salida'] : '',
+            'hora_regreso' => isset($viaje['hora_regreso']) ? $viaje['hora_regreso'] : '',
+            'local_origen' => isset($viaje['local_origen']) ? $viaje['local_origen'] : '',
+            'local_destino' => isset($viaje['local_destino']) ? $viaje['local_destino'] : '',
             'color' => $vehiculosEncontrados[$viaje['vehiculo_id']]['color']
         ];
         $current->add(new DateInterval('P1D'));
@@ -179,7 +183,30 @@ $diaSemanaInicio = ($diaSemanaInicio == 0) ? 6 : $diaSemanaInicio - 1;
                                             foreach ($diasOcupados[$diaActual] as $viaje) {
                                                 if (!in_array($viaje['vehiculo_id'], $vehiculosDelDia)) {
                                                     $vehiculosDelDia[] = $viaje['vehiculo_id'];
-                                                    echo "<div style='color: {$viaje['color']}; display: inline-block; margin: 1px;' title='Vehículo: {$viaje['numero_interno']} - Viaje ID: {$viaje['viaje_id']} ({$viaje['fecha_salida']} - {$viaje['fecha_regreso']})'>";
+                                                    $horaSalida = isset($viaje['hora_salida']) ? $viaje['hora_salida'] : '';
+                                                    $horaRegreso = isset($viaje['hora_regreso']) ? $viaje['hora_regreso'] : '';
+                                                    $localOrigen = isset($viaje['local_origen']) ? $viaje['local_origen'] : '';
+                                                    $localDestino = isset($viaje['local_destino']) ? $viaje['local_destino'] : '';
+                                                    
+                                                    $tooltipHoras = '';
+                                                    if ($horaSalida && $horaRegreso) {
+                                                        $tooltipHoras = " | Salida: {$horaSalida} - Regreso: {$horaRegreso}";
+                                                    } elseif ($horaSalida) {
+                                                        $tooltipHoras = " | Hora salida: {$horaSalida}";
+                                                    } elseif ($horaRegreso) {
+                                                        $tooltipHoras = " | Hora regreso: {$horaRegreso}";
+                                                    }
+                                                    
+                                                    $tooltipRuta = '';
+                                                    if ($localOrigen && $localDestino) {
+                                                        $tooltipRuta = " | Ruta: {$localOrigen} → {$localDestino}";
+                                                    } elseif ($localOrigen) {
+                                                        $tooltipRuta = " | Origen: {$localOrigen}";
+                                                    } elseif ($localDestino) {
+                                                        $tooltipRuta = " | Destino: {$localDestino}";
+                                                    }
+                                                    
+                                                    echo "<div style='color: {$viaje['color']}; display: inline-block; margin: 1px;' title='Vehículo: {$viaje['numero_interno']} - Viaje ID: {$viaje['viaje_id']} ({$viaje['fecha_salida']} - {$viaje['fecha_regreso']}){$tooltipHoras}{$tooltipRuta}'>";
                                                     echo "<i class='fa fa-square'></i>";
                                                     echo "</div>";
                                                 }
@@ -187,7 +214,30 @@ $diaSemanaInicio = ($diaSemanaInicio == 0) ? 6 : $diaSemanaInicio - 1;
                                         } else {
                                             // Para vehículo individual, mostrar icono de bus
                                             foreach ($diasOcupados[$diaActual] as $viaje) {
-                                                echo "<div class='text-danger' title='Viaje ID: {$viaje['viaje_id']} ({$viaje['fecha_salida']} - {$viaje['fecha_regreso']})'>";
+                                                $horaSalida = isset($viaje['hora_salida']) ? $viaje['hora_salida'] : '';
+                                                $horaRegreso = isset($viaje['hora_regreso']) ? $viaje['hora_regreso'] : '';
+                                                $localOrigen = isset($viaje['local_origen']) ? $viaje['local_origen'] : '';
+                                                $localDestino = isset($viaje['local_destino']) ? $viaje['local_destino'] : '';
+                                                
+                                                $tooltipHoras = '';
+                                                if ($horaSalida && $horaRegreso) {
+                                                    $tooltipHoras = " | Salida: {$horaSalida} - Regreso: {$horaRegreso}";
+                                                } elseif ($horaSalida) {
+                                                    $tooltipHoras = " | Hora salida: {$horaSalida}";
+                                                } elseif ($horaRegreso) {
+                                                    $tooltipHoras = " | Hora regreso: {$horaRegreso}";
+                                                }
+                                                
+                                                $tooltipRuta = '';
+                                                if ($localOrigen && $localDestino) {
+                                                    $tooltipRuta = " | Ruta: {$localOrigen} → {$localDestino}";
+                                                } elseif ($localOrigen) {
+                                                    $tooltipRuta = " | Origen: {$localOrigen}";
+                                                } elseif ($localDestino) {
+                                                    $tooltipRuta = " | Destino: {$localDestino}";
+                                                }
+                                                
+                                                echo "<div class='text-danger' title='Viaje ID: {$viaje['viaje_id']} ({$viaje['fecha_salida']} - {$viaje['fecha_regreso']}){$tooltipHoras}{$tooltipRuta}'>";
                                                 echo "<i class='fa fa-bus'></i>";
                                                 echo "</div>";
                                                 break; // Solo mostrar uno para evitar duplicados
@@ -217,8 +267,12 @@ $diaSemanaInicio = ($diaSemanaInicio == 0) ? 6 : $diaSemanaInicio - 1;
                         <thead>
                             <tr>
                                 <th>ID Viaje</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
                                 <th>Fecha Salida</th>
+                                <th>Hora Salida</th>
                                 <th>Fecha Regreso</th>
+                                <th>Hora Regreso</th>
                                 <th>Vehículo</th>
                                 <?php if ($idCoche == 0): ?>
                                 <th>Color</th>
@@ -229,8 +283,12 @@ $diaSemanaInicio = ($diaSemanaInicio == 0) ? 6 : $diaSemanaInicio - 1;
                             <?php foreach ($vehiculos as $viaje): ?>
                             <tr>
                                 <td><?= $viaje['id'] ?></td>
+                                <td><?= $viaje['local_origen'] ?></td>
+                                <td><?= $viaje['local_destino'] ?></td>
                                 <td><?= $viaje['fecha_salida_formatted'] ?></td>
+                                <td><?= isset($viaje['hora_salida']) ? $viaje['hora_salida'] : '-' ?></td>
                                 <td><?= $viaje['fecha_regreso_formatted'] ?></td>
+                                <td><?= isset($viaje['hora_regreso']) ? $viaje['hora_regreso'] : '-' ?></td>
                                 <td><?= $viaje['numero_interno'] ?></td>
                                 <?php if ($idCoche == 0): ?>
                                 <td>
