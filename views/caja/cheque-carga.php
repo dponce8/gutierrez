@@ -37,7 +37,7 @@
 </div>   
 
 <div class="row" style="padding-top: 15px; padding-left: 5px; padding-right: 5px;">
-    <div class="form-group col-sm-2" style="margin-top: -10px;">
+    <div class="form-group col-sm-2 banco-fields" style="margin-top: -10px;">
         <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Seleccione Banco</label>
         <select class="form-control " id="s_banco" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Bancos ...</option>
@@ -46,9 +46,18 @@
             <?php } ?>
         </select>
     </div>
-    <div class="form-group col-sm-3" style="margin-top: -10px; ">
+    <div class="form-group col-sm-3 banco-fields" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Librador</label>
         <input id="librador" type="text" class="form-control">
+    </div>
+    <div class="form-group col-sm-3 cuenta-fields" style="margin-top: 0px;">
+        <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Seleccione Cuenta</label>
+        <select class="form-control" id="s_cuenta_propio" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+            <option value="0">Cuentas ...</option>
+            <?php foreach ($cuentas as $t) {?>
+                <option data-caja="<?=$t['id_sucursal']?>" value="<?=$t['id']?>"><?=$t['cuenta']?></option>
+            <?php } ?>
+        </select>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Pago</label>
@@ -94,6 +103,14 @@
 <script>
     $(document).ready(function() {
         setChequePersona();
+        
+        // Filtrar cuentas al cargar la página
+        filtrarCuentasPorCaja();
+        
+        // Agregar evento de cambio al select de caja
+        $('#s_caja_ch').change(function() {
+            filtrarCuentasPorCaja();
+        });
     });
 
     $(".input_numero").on({
@@ -109,10 +126,60 @@
 
     function setChequePersona() {
         $('#s_persona_ch').val(0);
-        $('#s_persona_ch').prop('disabled', false);  
+        $('#s_persona_ch').prop('disabled', false);
+        
+        // Resetear visibilidad de todos los campos
+        $('.banco-fields').show();
+        $('.cuenta-fields').show();
+        
         if ($('#s_tipo').val() == 1) {
-            $('#s_persona_ch').prop('disabled', true);  
+            // Tipo 1: Solo mostrar cuentas bancarias, ocultar banco y librador
+            $('#s_persona_ch').prop('disabled', true);
+            $('.banco-fields').hide();
+        } else if ($('#s_tipo').val() == 2) {
+            // Tipo 2: Mostrar banco y librador, ocultar cuentas bancarias
+            $('.cuenta-fields').hide();
         }
+        
+        // Filtrar cuentas después de cambiar el tipo
+        filtrarCuentasPorCaja();
+    }
+
+    function filtrarCuentasPorCaja() {
+        const cajaSeleccionada = $('#s_caja_ch').val();
+        const selectCuenta = $('#s_cuenta_propio');
+        
+        // Resetear selección
+        selectCuenta.val(0);
+        
+        // Iterar sobre todas las opciones del select de cuentas
+        selectCuenta.find('option').each(function() {
+            const option = $(this);
+            const cuentaCaja = option.data('caja');
+            
+            // Si es la opción por defecto (value="0"), siempre mostrarla
+            if (option.val() == "0") {
+                option.show();
+                option.prop('disabled', false);
+                return;
+            }
+            
+            // Si no hay caja seleccionada, deshabilitar todas las cuentas
+            if (!cajaSeleccionada || cajaSeleccionada == "0") {
+                option.hide();
+                option.prop('disabled', true);
+                return;
+            }
+            
+            // Mostrar solo las cuentas que corresponden a la caja seleccionada
+            if (cuentaCaja == cajaSeleccionada) {
+                option.show();
+                option.prop('disabled', false);
+            } else {
+                option.hide();
+                option.prop('disabled', true);
+            }
+        });
     }    
 
     function cargarCheque() {
@@ -120,7 +187,7 @@
         var mensaje = "";
 
         if ($('#s_caja_ch').val() == 0) {
-            goOn = 0; mensaje = "Seleccione Caja.<br>"; 
+            goOn = 0; mensaje = "Seleccione Empresa.<br>"; 
         }
         if ($('#s_tipo').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione Tipo de Cheque.<br>"; 
@@ -128,17 +195,27 @@
         if ($('#s_persona_ch').val() == 0 && $('#s_tipo').val() == 2) {
             goOn = 0; mensaje = mensaje + "Seleccione Persona.<br>"; 
         }
-        if ($('#s_banco').val() == 0) {
-            goOn = 0; mensaje = mensaje + "Seleccione Banco.<br>"; 
+        
+        // Validaciones según el tipo de cheque
+        if ($('#s_tipo').val() == 1) {
+            // Tipo 1: Validar solo cuenta bancaria
+            if ($('#s_cuenta_propio').val() == 0) {
+                goOn = 0; mensaje = mensaje + "Seleccione Cuenta Bancaria.<br>"; 
+            }
+        } else if ($('#s_tipo').val() == 2) {
+            // Tipo 2: Validar banco y librador
+            if ($('#s_banco').val() == 0) {
+                goOn = 0; mensaje = mensaje + "Seleccione Banco.<br>"; 
+            }
+            if ($('#librador').val() == '' || $('#librador').val().trim() == '') {
+                goOn = 0; mensaje = mensaje + "Ingrese el Librador del cheque.<br>"; 
+            }
         }
         if ($('#s_orden').val() == 0) {
             goOn = 0; mensaje = mensaje + "Indique si el cheque es a la orden o no.<br>"; 
         }
         if ($('#s_formato').val() == 0) {
             goOn = 0; mensaje = mensaje + "Indique si el cheque es físico o electrónico.<br>"; 
-        }
-        if ($('#s_banco').val() == 0) {
-            goOn = 0; mensaje = mensaje + "Seleccione Banco.<br>"; 
         }
         if ($('#numero').val() == '0' || $('#numero').val() == '') {
             goOn = 0; mensaje = mensaje + "Ingrese Número de Cheque.<br>"; 
@@ -167,7 +244,7 @@
                     "&importe=" + $('#importe_ch').val() + "&numero=" + $('#numero').val() +
                     "&obs=" + $('#obs').val() + "&librador="+ $('#librador').val() +
                     "&pago=" + $('#pago').val() + "&formato=" + $('#s_formato').val() +
-                    "&orden=" + $('#s_orden').val()+"&fromMov="+$('#h_from_mov').val()
+                    "&orden=" + $('#s_orden').val() + "&cuenta=" + $('#s_cuenta_propio').val() + "&fromMov="+$('#h_from_mov').val()
                     , function (response) {
                         jQuery("#d_carga").html(response);
                     });

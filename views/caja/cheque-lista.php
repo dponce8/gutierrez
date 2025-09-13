@@ -21,6 +21,8 @@
             <th style="font-size: 10px; font-weight: bold">F. Depósito</th>
             <th style="font-size: 10px; font-weight: bold">Cuenta</th>
             <th style="font-size: 10px; font-weight: bold">F. Acreditación</th>
+            <th style="font-size: 10px; font-weight: bold">Cuenta Débito</th>
+            <th style="font-size: 10px; font-weight: bold">F. Débito</th>
         </tr>
         </thead>
         <tbody>
@@ -56,6 +58,8 @@
                 <td><?= $m['fecha_deposito'] ? date("d/m/Y",strtotime($m['fecha_deposito'])) : ''?></td>
                 <td><?= $m['cuenta']?></td>
                 <td><?= $m['fecha_acredita'] ? date("d/m/Y",strtotime($m['fecha_acredita'])) : ''?></td>
+                <td><?= $m['cuenta_origen'] ? $m['cuenta_origen'] : ''?></td>
+                <td><?= $m['fecha_debito'] ? date("d/m/Y",strtotime($m['fecha_debito'])) : ''?></td>
             </tr>
         <?php $c++; } ?>    
         </tbody>

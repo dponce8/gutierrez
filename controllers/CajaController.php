@@ -265,10 +265,11 @@ class CajaController extends \yii\web\Controller
         $tipos = $db->createCommand("select * from cheque_tipo")->queryAll();
         $formatos = $db->createCommand("select * from cheque_electronico")->queryAll();
         $tiposOrden = $db->createCommand("select * from cheque_orden")->queryAll();
+        $cuentas = $db->createCommand( "select * from banco_cuenta")->queryAll();
 
         return $this->renderPartial('cheque-carga',['bancos' => $bancos, 'cajas' => $cajas, 'personas' => $personas,
         'tipo' => $tipos, 'tiposOrden' => $tiposOrden, 'formatos' => $formatos, 
-        'fromMov' => $fromMov]);
+        'fromMov' => $fromMov, 'cuentas' => $cuentas]);
     } 
 
     public function actionChequeLista($caja, $banco, $tipo, $persona, $estado,
@@ -344,20 +345,19 @@ class CajaController extends \yii\web\Controller
         $listado = $db->createCommand("
         select c.*, t.tipo, ca.Empresa, concat(p.apellido,' ',p.nombre) persona, b.banco,
         concat(u.apellido,' ',u.nombre) usuario, e.estado, DATE_ADD(c.fecha_pago, INTERVAL 1 month) fecha_vto,
-        ce.formato, co.tipo ordenNombre, bc.cuenta
+        ce.formato, co.tipo ordenNombre, bc.cuenta, bc1.cuenta cuenta_origen
         from cheque c
-        join cheque_tipo t on t.id = c.id_tipo
-        join sueldosempresas ca on ca.idEmpresa = c.id_caja
-        left join persona p on p.id = c.id_persona
-        join banco b on b.id = c.id_banco
+        join cheque_tipo t on t.id = c.id_tipo and c.id_tipo between :tip1 and :tip2 
+        join sueldosempresas ca on ca.idEmpresa = c.id_caja and c.id_caja between :caj1 and :caj2
         join cheque_estado e on e.id = c.id_estado
         join user u on u.id = c.id_usuario
+        left join persona p on p.id = c.id_persona and c.id_persona between :per1 and :per2
+        left join banco b on b.id = c.id_banco and c.id_banco between :bco1 and :bco2               
         left join cheque_electronico ce on ce.id = c.electronico
         left join cheque_orden co on co.id = c.orden
         left join banco_cuenta bc on bc.id = c.id_cuenta
-        where c.id_caja between :caj1 and :caj2 and c.id_banco between :bco1 and :bco2 
-        and c.id_persona between :per1 and :per2 and c.id_tipo between :tip1 and :tip2 
-        and c.id_estado between :est1 and :est2
+        left join banco_cuenta bc1 on bc1.id = c.id_cuenta_origen
+        where c.id_estado between :est1 and :est2
         order by c.fecha_pago desc")
         ->bindValue(':caj1', $caja1)
         ->bindValue(':caj2', $caja2)
@@ -375,7 +375,7 @@ class CajaController extends \yii\web\Controller
     }
 
     public function actionChequeGuarda($caja, $banco, $tipo, $persona,
-    $importe, $numero, $obs, $librador, $pago, $formato, $orden, $fromMov = 0)
+    $importe, $numero, $obs, $librador, $pago, $formato, $orden, $cuenta,$fromMov = 0)
     {
         $db = Yii::$app->db;
 
@@ -386,9 +386,9 @@ class CajaController extends \yii\web\Controller
         $transaction = \Yii::$app->db->beginTransaction();
 
             $db->createCommand("insert into cheque (nro_cheque, librador, id_persona, id_banco, fecha_pago,
-            obs, id_tipo, importe, id_caja, id_usuario, id_estado, orden, electronico) 
+            obs, id_tipo, importe, id_caja, id_usuario, id_estado, orden, electronico, id_cuenta_origen) 
             values(:nro_cheque, :librador, :id_persona, :id_banco, :fecha_pago,
-            :obs, :id_tipo, :importe, :id_caja, :id_usuario, :estado, :orden, :formato)")
+            :obs, :id_tipo, :importe, :id_caja, :id_usuario, :estado, :orden, :formato, :id_cuenta_origen)")
             ->bindValue(':nro_cheque', $numero)
             ->bindValue(':librador', $librador)
             ->bindValue(':id_persona', $persona)
@@ -402,6 +402,7 @@ class CajaController extends \yii\web\Controller
             ->bindValue(':formato', $formato)
             ->bindValue(':estado', $estadoInicial)
             ->bindValue(':id_usuario', Yii::$app->user->identity->id)
+            ->bindValue(':id_cuenta_origen', $cuenta)
             ->execute();
 
             $ultimoId = $db->getLastInsertID();
