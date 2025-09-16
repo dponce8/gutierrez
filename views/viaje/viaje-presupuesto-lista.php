@@ -10,6 +10,8 @@
             <th style="font-size: 10px; font-weight: bold">Destino</th>
             <th style="font-size: 10px; font-weight: bold">Pasajeros</th>
             <th style="font-size: 10px; font-weight: bold">Total</th>
+            <th style="font-size: 10px; font-weight: bold">Fecha Salida</th>
+            <th style="font-size: 10px; font-weight: bold">Fecha Regreso</th>
             <th style="font-size: 10px; font-weight: bold">Dirección Origen</th>
             <th style="font-size: 10px; font-weight: bold">Dirección Destino</th>
             <th style="font-size: 10px; font-weight: bold">Usuario</th>
@@ -29,6 +31,8 @@
                 <td><?= $m['local_destino']?></td>
                 <td><?= $m['pasajeros']?></td>
                 <td><?= $m['total']?></td>
+                <td><?= date("d/m/Y",strtotime($m['fecha_salida'])).' '.$m['hora_salida']?></td>
+                <td><?= date("d/m/Y",strtotime($m['fecha_regreso'])).' '.$m['hora_regreso']?></td>
                 <td><?= $m['direccion_origen']?></td>
                 <td><?= $m['direccion_destino']?></td>
                 <td><?= $m['usuario']?></td>

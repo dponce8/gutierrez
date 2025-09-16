@@ -1372,7 +1372,8 @@ class CajaController extends \yii\web\Controller
         left join vehiculo vh on vh.id = v.id_vehiculo
         left join sueldosempresas se on se.idEmpresa = v.id_empresa
         left join (select id_viaje, sum(importe) importe_pagado from persona_movimiento where id_movimiento_tipo = 2 group by id_viaje) pm on pm.id_viaje = v.id
-        where v.id_cliente = :idPersona and v.id_empresa = :empresa and pm.importe_pagado < v.total")
+        where v.id_cliente = :idPersona and v.id_empresa = :empresa and 
+        case when pm.importe_pagado is null then 0 else pm.importe_pagado end < v.total")
         ->bindValue(':idPersona', $idPersona)
         ->bindValue(':empresa', $empresa)
         ->queryAll();

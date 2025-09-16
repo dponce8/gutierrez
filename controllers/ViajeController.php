@@ -88,23 +88,22 @@ class ViajeController extends \yii\web\Controller
                     FROM viaje 
                     WHERE id_vehiculo = :vehiculo 
                     AND (
-                        -- El nuevo viaje inicia durante un viaje existente
-                        (DATE(:fecha_salida) >= DATE(fecha_salida) AND DATE(:fecha_salida) <= DATE(fecha_regreso))
-                        OR 
-                        -- El nuevo viaje termina durante un viaje existente
-                        (DATE(:fecha_regreso) >= DATE(fecha_salida) AND DATE(:fecha_regreso) <= DATE(fecha_regreso))
-                        OR
-                        -- El nuevo viaje engloba completamente un viaje existente
-                        (DATE(:fecha_salida) < DATE(fecha_salida) AND DATE(:fecha_regreso) > DATE(fecha_regreso))
+                        -- El nuevo viaje inicia antes de que termine un viaje existente
+                        (CONCAT(:fecha_salida, ' ', :hora_salida) < CONCAT(fecha_regreso, ' ', hora_regreso))
+                        AND
+                        -- El nuevo viaje termina después de que inicie un viaje existente
+                        (CONCAT(:fecha_regreso, ' ', :hora_regreso) > CONCAT(fecha_salida, ' ', hora_salida))
                     )
                 ")
                 ->bindValue(':vehiculo', $coche)
                 ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
                 ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
                 ->queryScalar();
                 
                 if ($vehiculoOcupado > 0) {
-                    $errores[] = "El vehículo seleccionado ya está asignado a otro viaje en las fechas indicadas.";
+                    $errores[] = "El vehículo seleccionado ya está asignado a otro viaje en las fechas y horas indicadas.";
                 }
             }
             
@@ -115,23 +114,22 @@ class ViajeController extends \yii\web\Controller
                     FROM viaje 
                     WHERE (id_chofer_1 = :chofer OR id_chofer_2 = :chofer)
                     AND (
-                        -- El nuevo viaje inicia durante un viaje existente
-                        (DATE(:fecha_salida) >= DATE(fecha_salida) AND DATE(:fecha_salida) <= DATE(fecha_regreso))
-                        OR 
-                        -- El nuevo viaje termina durante un viaje existente
-                        (DATE(:fecha_regreso) >= DATE(fecha_salida) AND DATE(:fecha_regreso) <= DATE(fecha_regreso))
-                        OR
-                        -- El nuevo viaje engloba completamente un viaje existente
-                        (DATE(:fecha_salida) < DATE(fecha_salida) AND DATE(:fecha_regreso) > DATE(fecha_regreso))
+                        -- El nuevo viaje inicia antes de que termine un viaje existente
+                        (CONCAT(:fecha_salida, ' ', :hora_salida) < CONCAT(fecha_regreso, ' ', hora_regreso))
+                        AND
+                        -- El nuevo viaje termina después de que inicie un viaje existente
+                        (CONCAT(:fecha_regreso, ' ', :hora_regreso) > CONCAT(fecha_salida, ' ', hora_salida))
                     )
                 ")
                 ->bindValue(':chofer', $chofer_1)
                 ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
                 ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
                 ->queryScalar();
                 
                 if ($chofer1Ocupado > 0) {
-                    $errores[] = "El primer chofer seleccionado ya está asignado a otro viaje en las fechas indicadas.";
+                    $errores[] = "El primer chofer seleccionado ya está asignado a otro viaje en las fechas y horas indicadas.";
                 }
             }
             
@@ -142,23 +140,22 @@ class ViajeController extends \yii\web\Controller
                     FROM viaje 
                     WHERE (id_chofer_1 = :chofer OR id_chofer_2 = :chofer)
                     AND (
-                        -- El nuevo viaje inicia durante un viaje existente
-                        (DATE(:fecha_salida) >= DATE(fecha_salida) AND DATE(:fecha_salida) <= DATE(fecha_regreso))
-                        OR 
-                        -- El nuevo viaje termina durante un viaje existente
-                        (DATE(:fecha_regreso) >= DATE(fecha_salida) AND DATE(:fecha_regreso) <= DATE(fecha_regreso))
-                        OR
-                        -- El nuevo viaje engloba completamente un viaje existente
-                        (DATE(:fecha_salida) < DATE(fecha_salida) AND DATE(:fecha_regreso) > DATE(fecha_regreso))
+                        -- El nuevo viaje inicia antes de que termine un viaje existente
+                        (CONCAT(:fecha_salida, ' ', :hora_salida) < CONCAT(fecha_regreso, ' ', hora_regreso))
+                        AND
+                        -- El nuevo viaje termina después de que inicie un viaje existente
+                        (CONCAT(:fecha_regreso, ' ', :hora_regreso) > CONCAT(fecha_salida, ' ', hora_salida))
                     )
                 ")
                 ->bindValue(':chofer', $chofer_2)
                 ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
                 ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
                 ->queryScalar();
                 
                 if ($chofer2Ocupado > 0) {
-                    $errores[] = "El segundo chofer seleccionado ya está asignado a otro viaje en las fechas indicadas.";
+                    $errores[] = "El segundo chofer seleccionado ya está asignado a otro viaje en las fechas y horas indicadas.";
                 }
             }
             

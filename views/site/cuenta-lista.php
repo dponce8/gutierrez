@@ -10,6 +10,7 @@
             <th style="font-size: 10px; font-weight: bold">Haber</th>
             <th style="font-size: 10px; font-weight: bold">Saldo</th>
             <th style="font-size: 10px; font-weight: bold">Usuario</th>
+            <th style="font-size: 10px; font-weight: bold">Viaje</th>
             <th style="font-size: 10px; font-weight: bold">Observaciones</th>
         </tr>
         </thead>
@@ -24,6 +25,7 @@
                 <td onClick="verMedios(<?=(int)$m['idMov'].','.(int)$m['id_movimiento_tipo'].','.(int)$m['id_viaje'].','.$c?>)" align="right"><?= number_format(floatval($m['haber']),2, ',', '.')?></td>
                 <td onClick="verMedios(<?=(int)$m['idMov'].','.(int)$m['id_movimiento_tipo'].','.(int)$m['id_viaje'].','.$c?>)" align="right"><?= number_format(floatval($m['saldo']),2, ',', '.')?></td>
                 <td onClick="verMedios(<?=(int)$m['idMov'].','.(int)$m['id_movimiento_tipo'].','.(int)$m['id_viaje'].','.$c?>)"><?= $m['usuario']?></td>
+                <td onClick="verMedios(<?=(int)$m['idMov'].','.(int)$m['id_movimiento_tipo'].','.(int)$m['id_viaje'].','.$c?>)"><?= $m['id_viaje']?></td>
                 <td onClick="verMedios(<?=(int)$m['idMov'].','.(int)$m['id_movimiento_tipo'].','.(int)$m['id_viaje'].','.$c?>)"><?= $m['obs']?></td>
             </tr>
         <?php $c++; } ?>    
