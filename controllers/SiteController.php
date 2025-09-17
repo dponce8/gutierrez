@@ -491,4 +491,40 @@ class SiteController extends Controller
         ob_end_clean();
         $pdf->Output('cuenta_persona.pdf', 'I');
     }
+
+    public function actionCuentaViaje($id)  
+    {
+        $db = Yii::$app->db;
+
+        $listado = $db->createCommand("
+        select v.*, concat(p.apellido,' ',p.nombre) cliente,
+        concat(e1.apellido,' ',e1.nombre) chofer_1,
+        concat(e2.apellido,' ',e2.nombre) chofer_2,
+        concat(u.apellido,' ',u.nombre) usuario,
+        lo.localidad local_origen, ld.localidad local_destino,
+        po.provincia pcia_origen, pd.provincia pcia_destino,
+        pao.pais pais_origen, pad.pais pais_destino,
+        vh.numero_interno coche,
+        se.Empresa empresa, pm.importe_pagado
+        from viaje v
+        join persona p on p.id = v.id_cliente
+        left join empleados e1 on e1.idempleado = v.id_chofer_1
+        left join empleados e2 on e2.idempleado = v.id_chofer_1
+        left join persona p2 on p2.id = v.id_chofer_2
+        left join user u on u.id = v.id_usuario
+        left join localidades lo on lo.idlocalidad = v.origen
+        left join localidades ld on ld.idlocalidad = v.destino
+        left join provincia po on po.id = lo.id_provincia
+        left join provincia pd on pd.id = ld.id_provincia
+        left join pais pao on pao.id = po.id_pais
+        left join pais pad on pad.id = po.id_pais
+        left join vehiculo vh on vh.id = v.id_vehiculo
+        left join sueldosempresas se on se.idEmpresa = v.id_empresa
+        left join (select id_viaje, sum(importe) importe_pagado from persona_movimiento where id_movimiento_tipo = 2 group by id_viaje) pm on pm.id_viaje = v.id
+        where v.id = :id ")
+        ->bindValue(':id', $id)
+        ->queryOne();
+
+        return $this->renderPartial('cuenta-viaje', ['listado' => $listado]);
+    }
 }

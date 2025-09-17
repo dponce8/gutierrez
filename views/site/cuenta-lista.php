@@ -36,7 +36,7 @@
 <input type="hidden" id="h_fila_mov" value="<?=$c?>"/>
 
 <script>
-    function verMedios(id,idTipo, idHoja, fila) {
+    function verMedios(id,idTipo, idViaje, fila) {
         if (idTipo == 2) {
             if (id > 0) {
                 document.getElementById("arqueoTitulo").innerHTML="Medios de Pago"; 
@@ -45,9 +45,9 @@
                 });
             }
         } else {
-            if (idHoja > 0) {
+            if (idViaje > 0) {
                 document.getElementById("arqueoTitulo").innerHTML="Hoja de Ruta"; 
-                $.post("index.php?r=site/cuenta-hoja&id="+idHoja+"&tipoPersona="+$('#h_tipo_persona').val() , function (response) {
+                $.post("index.php?r=site/cuenta-viaje&id="+idViaje, function (response) {
                     jQuery("#contenidoArqueoModal").html(response);
                 });
             }
