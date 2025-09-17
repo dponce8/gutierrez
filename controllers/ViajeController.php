@@ -591,4 +591,70 @@ class ViajeController extends \yii\web\Controller
         return $this->renderPartial('vehiculo-lista', ['vehiculos' => $vehiculos]);
     }
 
+    public function actionSaldo()
+    {
+        $db = Yii::$app->db;
+
+        $personas = $db->createCommand("select id, concat(apellido,' ',nombre) as persona 
+        from persona where id_tipo_persona = 1 order by persona;")
+        ->queryAll();
+
+        $empresas = $db->createCommand("select idEmpresa, Empresa from sueldosempresas order by Empresa;")
+        ->queryAll();
+
+        return $this->render('saldo', ['personas' => $personas, 'empresas' => $empresas]);
+    }
+
+    public function actionSaldoLista($idPersona, $empresa)  
+    {
+        $db = Yii::$app->db;
+
+        $emp1 = $empresa; $emp2 = $empresa;
+        if ($empresa == 0) {
+            $emp1 = 1;
+            $emp2 = 9999;
+        }
+
+        $per1 = $idPersona; $per2 = $idPersona;
+        if ($idPersona == 0) {
+            $per1 = 1;
+            $per2 = 9999;
+        }
+
+        $listado = $db->createCommand("
+        select v.*, concat(p.apellido,' ',p.nombre) cliente,
+        concat(e1.apellido,' ',e1.nombre) chofer_1,
+        concat(e2.apellido,' ',e2.nombre) chofer_2,
+        concat(u.apellido,' ',u.nombre) usuario,
+        lo.localidad local_origen, ld.localidad local_destino,
+        po.provincia pcia_origen, pd.provincia pcia_destino,
+        pao.pais pais_origen, pad.pais pais_destino,
+        vh.numero_interno coche,
+        se.Empresa empresa, pm.importe_pagado
+        from viaje v
+        join persona p on p.id = v.id_cliente
+        left join empleados e1 on e1.idempleado = v.id_chofer_1
+        left join empleados e2 on e2.idempleado = v.id_chofer_1
+        left join persona p2 on p2.id = v.id_chofer_2
+        left join user u on u.id = v.id_usuario
+        left join localidades lo on lo.idlocalidad = v.origen
+        left join localidades ld on ld.idlocalidad = v.destino
+        left join provincia po on po.id = lo.id_provincia
+        left join provincia pd on pd.id = ld.id_provincia
+        left join pais pao on pao.id = po.id_pais
+        left join pais pad on pad.id = po.id_pais
+        left join vehiculo vh on vh.id = v.id_vehiculo
+        left join sueldosempresas se on se.idEmpresa = v.id_empresa
+        left join (select id_viaje, sum(importe) importe_pagado from persona_movimiento where id_movimiento_tipo = 2 group by id_viaje) pm on pm.id_viaje = v.id
+        where v.id_cliente between :per1 and :per2 and v.id_empresa between :emp1 and :emp2
+        -- and case when pm.importe_pagado is null then 0 else pm.importe_pagado end < v.total")
+        ->bindValue(':per1', $per1)
+        ->bindValue(':per2', $per2)
+        ->bindValue(':emp1', $emp1)
+        ->bindValue(':emp2', $emp2)
+        ->queryAll();
+
+        return $this->renderPartial('saldo-lista', ['listado' => $listado]);
+    }
+
 }
