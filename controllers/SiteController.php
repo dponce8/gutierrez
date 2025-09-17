@@ -90,8 +90,43 @@ class SiteController extends Controller
             \Yii::$app->getUser()->logout();
             return $this->redirect(['site/login']);
         } else {
-            return $this->render('index');
+            // Obtener viajes próximos para mostrar alertas
+            $viajesProximos = $this->getViajesProximos();
+            return $this->render('index', ['viajesProximos' => $viajesProximos]);
         }
+    }
+
+    /**
+     * Obtiene los viajes que están próximos (2 días antes de la fecha de salida)
+     * @return array
+     */
+    private function getViajesProximos()
+    {
+        $db = Yii::$app->db;
+        
+        $viajes = $db->createCommand("
+            SELECT v.id, v.fecha_salida, v.hora_salida, v.fecha_regreso, v.hora_regreso,
+                   CONCAT(p.apellido, ' ', p.nombre) as cliente,
+                   CONCAT(e1.apellido, ' ', e1.nombre) as chofer_1,
+                   CONCAT(e2.apellido, ' ', e2.nombre) as chofer_2,
+                   lo.localidad as origen,
+                   ld.localidad as destino,
+                   vh.numero_interno as vehiculo,
+                   v.pasajeros,
+                   DATEDIFF(DATE(v.fecha_salida), CURDATE()) as dias_restantes
+            FROM viaje v
+            JOIN persona p ON p.id = v.id_cliente
+            LEFT JOIN empleados e1 ON e1.idempleado = v.id_chofer_1
+            LEFT JOIN empleados e2 ON e2.idempleado = v.id_chofer_2
+            LEFT JOIN localidades lo ON lo.idlocalidad = v.origen
+            LEFT JOIN localidades ld ON ld.idlocalidad = v.destino
+            LEFT JOIN vehiculo vh ON vh.id = v.id_vehiculo
+            WHERE DATE(v.fecha_salida) >= CURDATE() 
+            AND DATE(v.fecha_salida) <= DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+            ORDER BY v.fecha_salida ASC, v.hora_salida ASC
+        ")->queryAll();
+        
+        return $viajes;
     }
 
     /**
