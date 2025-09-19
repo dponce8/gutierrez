@@ -387,11 +387,13 @@ class ViajeController extends \yii\web\Controller
                 $nuevo = $db->getLastInsertID();
 
             } else {
+                $id_estado = 0;
+                if (Yii::$app->user->identity->id_perfil == 3) {$id_estado = 1;}
                 $db->createCommand("update presupuesto set id_cliente = :cliente, fecha = curdate(), 
                 fecha_salida = :fecha_salida, hora_salida = :hora_salida, fecha_regreso = :fecha_regreso, 
                 hora_regreso = :hora_regreso, origen = :origen, destino = :destino, direccion_origen = :direccion_origen, 
                 direccion_destino = :direccion_destino, total = :total, obs = :obs, id_usuario = :id_usuario, pasajeros = :pasajeros, 
-                fecha_vto = :fecha_vto 
+                fecha_vto = :fecha_vto, id_estado = :id_estado
                 where id = :id")
                 ->bindValue(':cliente', $cliente)
                 ->bindValue(':fecha_salida', $fecha_salida)
@@ -408,6 +410,7 @@ class ViajeController extends \yii\web\Controller
                 ->bindValue(':pasajeros', $pasajeros)
                 ->bindValue(':fecha_vto', $fecha_vto)
                 ->bindValue(':id', $id_presupuesto)
+                ->bindValue(':id_estado', $id_estado)
                 ->execute();
             }
             $transaction->commit();
