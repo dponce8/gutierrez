@@ -340,6 +340,11 @@ class ViajeController extends \yii\web\Controller
             $db->createCommand("delete from presupuesto where id = :id")->bindValue(':id', $idPresupuesto)->execute();
         }
 
+        if ($request->get('aprobar') == 1) {
+            $idPresupuesto = $request->get('idPresupuesto');
+            $db->createCommand("update presupuesto set id_estado = 1 where id = :id")->bindValue(':id', $idPresupuesto)->execute();
+        }
+
         if ($request->get('guardar') == 1) {
             $transaction = \Yii::$app->db->beginTransaction();
 
@@ -357,28 +362,54 @@ class ViajeController extends \yii\web\Controller
             $id_usuario = Yii::$app->user->identity->id;
             $pasajeros = $request->get('pasajeros');
             $fecha_vto = $request->get('fecha_vto');
+            $id_presupuesto = $request->get('id_presupuesto');
+            if ($id_presupuesto == 0) {
+                $db->createCommand("insert into presupuesto (id_cliente,fecha, fecha_salida, hora_salida, fecha_regreso, hora_regreso, origen, destino, 
+                direccion_origen, direccion_destino, total, obs, id_usuario, pasajeros, fecha_vto) 
+                values (:cliente,curdate(), :fecha_salida, :hora_salida, :fecha_regreso, :hora_regreso, :origen, :destino, :direccion_origen, 
+                :direccion_destino, :total, :obs, :id_usuario, :pasajeros, :fecha_vto)")
+                ->bindValue(':cliente', $cliente)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
+                ->bindValue(':origen', $origen)
+                ->bindValue(':destino', $destino)
+                ->bindValue(':direccion_origen', $direccion_origen)
+                ->bindValue(':direccion_destino', $direccion_destino)
+                ->bindValue(':total', $total)
+                ->bindValue(':obs', $obs)
+                ->bindValue(':id_usuario', $id_usuario)
+                ->bindValue(':pasajeros', $pasajeros)
+                ->bindValue(':fecha_vto', $fecha_vto)
+                ->execute();
 
-            $db->createCommand("insert into presupuesto (id_cliente,fecha, fecha_salida, hora_salida, fecha_regreso, hora_regreso, origen, destino, 
-            direccion_origen, direccion_destino, total, obs, id_usuario, pasajeros, fecha_vto) 
-            values (:cliente,curdate(), :fecha_salida, :hora_salida, :fecha_regreso, :hora_regreso, :origen, :destino, :direccion_origen, 
-            :direccion_destino, :total, :obs, :id_usuario, :pasajeros, :fecha_vto)")
-            ->bindValue(':cliente', $cliente)
-            ->bindValue(':fecha_salida', $fecha_salida)
-            ->bindValue(':hora_salida', $hora_salida)
-            ->bindValue(':fecha_regreso', $fecha_regreso)
-            ->bindValue(':hora_regreso', $hora_regreso)
-            ->bindValue(':origen', $origen)
-            ->bindValue(':destino', $destino)
-            ->bindValue(':direccion_origen', $direccion_origen)
-            ->bindValue(':direccion_destino', $direccion_destino)
-            ->bindValue(':total', $total)
-            ->bindValue(':obs', $obs)
-            ->bindValue(':id_usuario', $id_usuario)
-            ->bindValue(':pasajeros', $pasajeros)
-            ->bindValue(':fecha_vto', $fecha_vto)
-            ->execute();
+                $nuevo = $db->getLastInsertID();
 
-            $nuevo = $db->getLastInsertID();
+            } else {
+                $db->createCommand("update presupuesto set id_cliente = :cliente, fecha = curdate(), 
+                fecha_salida = :fecha_salida, hora_salida = :hora_salida, fecha_regreso = :fecha_regreso, 
+                hora_regreso = :hora_regreso, origen = :origen, destino = :destino, direccion_origen = :direccion_origen, 
+                direccion_destino = :direccion_destino, total = :total, obs = :obs, id_usuario = :id_usuario, pasajeros = :pasajeros, 
+                fecha_vto = :fecha_vto 
+                where id = :id")
+                ->bindValue(':cliente', $cliente)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
+                ->bindValue(':origen', $origen)
+                ->bindValue(':destino', $destino)
+                ->bindValue(':direccion_origen', $direccion_origen)
+                ->bindValue(':direccion_destino', $direccion_destino)
+                ->bindValue(':total', $total)
+                ->bindValue(':obs', $obs)
+                ->bindValue(':id_usuario', $id_usuario)
+                ->bindValue(':pasajeros', $pasajeros)
+                ->bindValue(':fecha_vto', $fecha_vto)
+                ->bindValue(':id', $id_presupuesto)
+                ->execute();
+            }
             $transaction->commit();
         }
 
@@ -414,7 +445,7 @@ class ViajeController extends \yii\web\Controller
         return $this->renderPartial('presupuesto-lista', ['listado' => $listado, 'nuevo' => $nuevo]);
     }   
 
-    public function actionPresupuestoCarga()
+    public function actionPresupuestoCarga($id)
     {
         $db = Yii::$app->db;
 
@@ -426,7 +457,12 @@ class ViajeController extends \yii\web\Controller
         order by pa.pais, p.provincia, l.localidad")
         ->queryAll();
 
-        return $this->renderPartial('presupuesto-carga', ['clientes' => $clientes,  'localidades' => $localidades]);
+        $infoPresupuesto = null;
+        if ($id != 0) {
+            $infoPresupuesto = $db->createCommand("select * from presupuesto where id = :id")->bindValue(':id', $id)->queryOne();
+        }
+
+        return $this->renderPartial('presupuesto-carga', ['clientes' => $clientes,  'localidades' => $localidades, 'infoPresupuesto' => $infoPresupuesto]);
     }
 
     public function actionPresupuestoImprime($id)
@@ -499,7 +535,7 @@ class ViajeController extends \yii\web\Controller
             left join provincia pd on pd.id = ld.id_provincia
             left join pais pao on pao.id = po.id_pais
             left join pais pad on pad.id = po.id_pais
-            where v.id = :nro;")
+            where v.id = :nro and v.id_estado = 1;")
             ->bindValue(':nro', $nro)
             ->queryAll();
         } else {
@@ -523,7 +559,7 @@ class ViajeController extends \yii\web\Controller
             left join provincia pd on pd.id = ld.id_provincia
             left join pais pao on pao.id = po.id_pais
             left join pais pad on pad.id = po.id_pais
-            where v.id_cliente between :per1 and :per2;")
+            where v.id_cliente between :per1 and :per2 and v.id_estado = 1")
             ->bindValue(':per1', $per1)
             ->bindValue(':per2', $per2)
             ->queryAll();

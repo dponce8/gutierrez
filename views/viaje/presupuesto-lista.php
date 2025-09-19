@@ -3,6 +3,8 @@
         <thead class="table-dark">
         <tr style="font-size: 10px;">
             <th style="font-size: 10px; font-weight: bold">N°</th>
+                <th style="font-size: 10px; font-weight: bold"></th>
+            <th style="font-size: 10px; font-weight: bold"></th>
             <th style="font-size: 10px; font-weight: bold"></th>
             <th style="font-size: 10px; font-weight: bold"></th>
             <th style="font-size: 10px; font-weight: bold">Fecha</th>
@@ -22,10 +24,20 @@
             <tr class="table-light" id="fila_m_<?=$c?>" style="font-size: 12px; cursor: pointer; ">
                 <td><?= $m['id'] ?></td>
                 <td>
-                    <span style="color: green; cursor: pointer; font-size: 16px;" title="Reimprimir" onclick="imprimirPresupuesto(<?= $m['id']?>)"><i class="fa fa-print"></i></span>  
+                    <?php if (Yii::$app->user->identity->id_perfil == 3 and $m['id_estado'] == 0) {?>
+                        <span style="color: green; cursor: pointer; font-size: 16px;" title="Aprobar Presupuesto" onclick="aprobarPresupuesto(<?= $m['id']?>)"><i class="fa fa-check"></i></span>  
+                    <?php } ?>
+                </td>
+                <td>
+                    <?php if ($m['id_estado'] == 1 or Yii::$app->user->identity->id_perfil == 3) {?>
+                        <span style="color: green; cursor: pointer; font-size: 16px;" title="Reimprimir" onclick="imprimirPresupuesto(<?= $m['id']?>)"><i class="fa fa-print"></i></span>  
+                    <?php } ?>
                 </td>
                 <td>
                     <span style="color: red; cursor: pointer; font-size: 16px;" title="Elimimnar Presupuesto" onclick="eliminarPresupuesto(<?= $m['id']?>)"><i class="fa fa-trash"></i></span>  
+                </td>
+                <td>
+                    <span style="color: black; cursor: pointer; font-size: 16px;" title="Editar Presupuesto" onclick="abrirCarga(<?= $m['id']?>)"><i class="fa fa-edit"></i></span>  
                 </td>
                 <td><?= date("d/m/Y",strtotime($m['fecha']))?></td>
                 <td><?= $m['cliente']?></td>
@@ -48,9 +60,6 @@
 <script>
     $(document).ready(function() {
         $('#movModal').modal('hide');
-        <?php if ($nuevo > 0) { ?>
-            imprimirPresupuesto(<?=$nuevo?>);
-        <?php } ?>
     });
 
     function eliminarPresupuesto(id) {
@@ -66,6 +75,26 @@
             if (result.isConfirmed) {
                 $.post("index.php?r=viaje/presupuesto-lista&idPersona=" + $("#s_persona_filtro").val() + "&desde=" + $("#desde").val() + "&hasta=" + $("#hasta").val() +
                 "&idPresupuesto=" + id + "&eliminar=1"
+                    , function (response) {
+                        jQuery("#d_presupuesto_lista").html(response);
+                    });
+            }
+        })
+    }
+
+    function aprobarPresupuesto(id) {
+        Swal.fire({
+            title: 'Presupuestos',
+            text: 'Aprobar Presupuesto?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Aprobar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post("index.php?r=viaje/presupuesto-lista&idPersona=" + $("#s_persona_filtro").val() + "&desde=" + $("#desde").val() + "&hasta=" + $("#hasta").val() +
+                "&idPresupuesto=" + id + "&aprobar=1"
                     , function (response) {
                         jQuery("#d_presupuesto_lista").html(response);
                     });

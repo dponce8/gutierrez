@@ -86,8 +86,8 @@ $tbl =
         <td align="center" width="265" style="font-size: 10px; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">DIRECCION DESTINO </td>
     </tr>
     <tr>
-        <td align="center" width="265" style="font-size: 10px; font-weight: bold; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">' . $datos['direccion_origen'] . '</td>
-        <td align="center" width="265" style="font-size: 10px; font-weight: bold; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">' . $datos['direccion_destino'] . '</td>
+        <td align="center" width="265" style="font-size: 10px; font-weight: bold; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">' . $datos['direccion_origen'] . ' (' . $datos['local_origen'] . ')</td>
+        <td align="center" width="265" style="font-size: 10px; font-weight: bold; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">' . $datos['direccion_destino'] . ' (' . $datos['local_destino'] . ')</td>
     </tr>
     <tr>
         <td align="left" width="150" style="font-size: 10px;;"> </td>

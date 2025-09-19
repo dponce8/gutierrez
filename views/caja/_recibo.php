@@ -5,20 +5,20 @@ if ($tipoConcepto == 2) {    // Orden de pago
     $tbl =
     '<table border="0" cellpadding="5">
         <tr>
-            <td rowspan="3" width="80" style="font-size: 9px; border-top-style: solid; border-left-style: solid;" align="center">
+            <td rowspan="3" width="180" style="font-size: 9px; border-top-style: solid; border-left-style: solid;" align="center">
             <div style="padding-top: 80px;">
-                ' . Html::img('@web/images/logo.png', ['width' => '80px']) . '
+                ' . Html::img('@web/images/logo.png', ['width' => '180px']) . '
             </div>
             </td>
             <td rowspan="3" width="10" style="font-size: 9px; border-top-style: solid;"></td>
-            <td align="left" width="250" style="font-size: 14px; font-weight: bolder; border-top-style: solid;">Gutierrez Hermanos</td>
+            <td align="left" width="150" style="font-size: 14px; font-weight: bolder; border-top-style: solid;"></td>
             <td align="right" width="200" style="font-size: 9px; border-top-style: solid;  border-right-style: solid;">'.date("d/m/Y H:i:s").'</td>
         </tr>
         <tr>
-            <td align="left" colspan="3" style="font-size: 10px; border-right-style: solid;">CUIT: 30-11111111</td>
+            <td align="left" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
         </tr>
         <tr>
-            <td align="left" colspan="2" width="280"  style="font-size: 10px;; ">Domicilio: Chacabuco</td>
+            <td align="left" colspan="2" width="180"  style="font-size: 10px;; "></td>
             <td align="right" width="170" style="font-size: 10px; border-right-style: solid; "><b>ORDEN DE PAGO N° '.$datos['nro_comprobante'].'</b></td>
         </tr>     
         <tr>
@@ -178,24 +178,24 @@ if ($tipoConcepto == 2) {    // Orden de pago
     $tbl =
     '<table border="0" cellpadding="5">
         <tr>
-            <td rowspan="3" width="80" style="font-size: 9px; border-top-style: solid; border-left-style: solid;" align="center">
+            <td rowspan="3" width="180" style="font-size: 9px; border-top-style: solid; border-left-style: solid;" align="center">
             <div style="padding-top: 80px;">
-                ' . Html::img('@web/images/logo.png', ['width' => '80px']) . '
+                ' . Html::img('@web/images/logo.png', ['width' => '180px']) . '
             </div>
             </td>
             <td rowspan="3" width="10" style="font-size: 9px; border-top-style: solid;"></td>
-            <td align="left" width="250" style="font-size: 14px; font-weight: bolder; border-top-style: solid;">Gutierrez Hermanos</td>
-            <td align="right" width="200" style="font-size: 9px; border-top-style: solid;  border-right-style: solid;">'.date("d/m/Y H:i:s").'</td>
+            <td align="left" width="180" style="font-size: 14px; font-weight: bolder; border-top-style: solid;"></td>
+            <td align="right" width="170" style="font-size: 9px; border-top-style: solid;  border-right-style: solid;">'.date("d/m/Y H:i:s").'</td>
         </tr>
         <tr>
-            <td align="left" width="170" colspan="3" style="font-size: 10px; border-right-style: solid;">CUIT: 30-6666666-6</td>
+            <td align="left" width="80" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
             <td align="center" width="30" colspan="3" style="font-size: 17px; border-bottom-style: solid; border-top-style: solid;  border-right-style: solid;"> X</td>
-            <td align="left" width="250" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
+            <td align="left" width="240" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
         </tr>
         <tr>
-            <td align="left" colspan="2" width="165"  style="font-size: 10px;; ">Domicilio: Chacabuco</td>
+            <td align="left" colspan="2" width="78"  style="font-size: 10px;; "></td>
             <td align="center" colspan="2" width="40"  style="font-size: 5px;; ">Documento no válido como factura</td>
-            <td align="right" width="245" style="font-size: 10px; border-right-style: solid; "><b>RECIBO INTERNO N° '.$datos['nro_comprobante'].'</b></td>
+            <td align="right" width="232" style="font-size: 10px; border-right-style: solid; "><b>RECIBO INTERNO N° '.$datos['nro_comprobante'].'</b></td>
         </tr>     
         <tr>
             <td align="left" width="60" style="font-size: 9px; border-left-style: solid; solid; border-top-style: solid;">

@@ -4,38 +4,38 @@
         <select class="form-control my-chosen-select" id="s_cliente" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Clientes ...</option>
             <?php foreach ($clientes as $p) {?>
-                <option value="<?=$p['id']?>"><?=$p['apellido'].' '.$p['nombre']?></option>
+                <option value="<?=$p['id']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['id_cliente'] == $p['id']) ? 'selected' : ''?>><?=$p['apellido'].' '.$p['nombre']?></option>
             <?php } ?>
         </select>
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Salida</label>
-        <input id="fecha_salida" type="date" class="form-control" value="<?=date("Y-m-d")?>">
+        <input id="fecha_salida" type="date" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? date("Y-m-d", strtotime($infoPresupuesto['fecha_salida'])) : date("Y-m-d"))?>">
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Hora</label>
-        <input id="hora_salida" type="time" class="form-control" value="<?=date("H:i")?>">
+        <input id="hora_salida" type="time" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? date("H:i", strtotime($infoPresupuesto['hora_salida'])) : date("H:i"))?>">
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Regreso</label>
-        <input id="fecha_regreso" type="date" class="form-control" value="<?=date("Y-m-d")?>">
+        <input id="fecha_regreso" type="date" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? date("Y-m-d", strtotime($infoPresupuesto['fecha_regreso'])) : date("Y-m-d"))?>">
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Hora</label>
-        <input id="hora_regreso" type="time" class="form-control" value="<?=date("H:i")?>">
+        <input id="hora_regreso" type="time" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? date("H:i", strtotime($infoPresupuesto['hora_regreso'])) : date("H:i"))?>">
     </div>
 </div> 
 <div class="row">
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Pasajeros</label>
-        <input id="pasajeros" type="text" class="form-control">
+        <input id="pasajeros" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['pasajeros'] : '')?>">
     </div>
     <div class="form-group col-sm-5" style="margin-top: -10px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Origen</label>
         <select class="form-control my-chosen-select" id="s_origen" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Origen ...</option>
             <?php foreach ($localidades as $p) {?>
-                <option value="<?=$p['idlocalidad']?>"><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
+                <option value="<?=$p['idlocalidad']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['origen'] == $p['idlocalidad']) ? 'selected' : ''?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
             <?php } ?>
         </select>
     </div>
@@ -44,7 +44,7 @@
         <select class="form-control my-chosen-select" id="s_destino" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Destino ...</option>
             <?php foreach ($localidades as $p) {?>
-                <option value="<?=$p['idlocalidad']?>"><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
+                <option value="<?=$p['idlocalidad']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['destino'] == $p['idlocalidad']) ? 'selected' : ''?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
             <?php } ?>
         </select>
     </div>
@@ -52,28 +52,30 @@
 <div class="row">
     <div class="form-group col-sm-6" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Dirección Origen</label>
-        <input id="direccion_origen" type="text" class="form-control">
+        <input id="direccion_origen" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['direccion_origen'] : '')?>">
     </div>
     <div class="form-group col-sm-6" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Dirección Destino</label>
-        <input id="direccion_destino" type="text" class="form-control">
+        <input id="direccion_destino" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['direccion_destino'] : '')?>">
     </div>
 </div> 
 
 <div class="row">
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Total Viaje</label>
-        <input id="total" type="text" class="form-control">
+        <input id="total" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['total'] : '')?>">
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Fecha Vto</label>
-        <input id="fecha_vto" type="date" class="form-control" value="<?=date("Y-m-d")?>">
+        <input id="fecha_vto" type="date" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? date("Y-m-d", strtotime($infoPresupuesto['fecha_vto'])) : date("Y-m-d"))?>">
     </div>
     <div class="form-group col-sm-8" style="margin-top: -10px; ">
         <label style="font-size: 11px; ">Observaciones</label>
-        <input id="obs" type="text" class="form-control">
+        <input id="obs" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['obs'] : '')?>">
     </div>
 </div> 
+
+<input id="h_id_presupuesto" type="hidden" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['id'] : 0)?>">
 
 <script>
     $(document).ready(function() {
@@ -144,6 +146,7 @@
                     "&obs=" + $('#obs').val() +
                     "&pasajeros=" + $('#pasajeros').val() +
                     "&fecha_vto=" + $('#fecha_vto').val() +
+                    "&id_presupuesto=" + $('#h_id_presupuesto').val() +
                     "&guardar=1"
                     , function (response) {
                         jQuery("#d_presupuesto_lista").html(response);

@@ -1,7 +1,7 @@
 <div class="card text-white bg-dark mb-12">
   <div class="card-header">
     <i style="font-size: 17px; padding-right: 10px" class="fa fa-sticky-note-o"></i> Presupuestos
-        <button type="button" title="Nuevo Presupuesto" class="btn btn-info float-right" style="margin-right: 8px;" onClick="abrirCarga()"><i class="fa fa-plus"></i></button>
+        <button type="button" title="Nuevo Presupuesto" class="btn btn-info float-right" style="margin-right: 8px;" onClick="abrirCarga(0)"><i class="fa fa-plus"></i></button>
        
   </div>
 </div>
@@ -75,11 +75,11 @@
   }
 
 
-    function abrirCarga() {
-        $.post("index.php?r=viaje/presupuesto-carga" , function (response) {
-            jQuery("#contenidoMovModal").html(response);
-        });
+    function abrirCarga(id) {
         limpiar();
+        $.post("index.php?r=viaje/presupuesto-carga&id=" + id , function (response) {
+            jQuery("#contenidoMovModal").html(response);
+        });        
 
         $('#movModal').modal('show');
     }  
