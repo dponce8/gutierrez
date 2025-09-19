@@ -44,7 +44,7 @@
                 <td><?= $m['local_origen']?></td>
                 <td><?= $m['local_destino']?></td>
                 <td><?= $m['pasajeros']?></td>
-                <td><?= $m['total']?></td>
+                <td><?= number_format(floatval($m['total']), 2, ',', '.')?></td>
                 <td><?= $m['direccion_origen']?></td>
                 <td><?= $m['direccion_destino']?></td>
                 <td><?= $m['usuario']?></td>
