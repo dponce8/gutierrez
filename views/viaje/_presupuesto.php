@@ -100,6 +100,13 @@ $tbl =
         <td align="left" width="150" style="font-size: 10px;;"> </td>
     </tr>
     <tr>
+        <td align="center" width="265" style="font-size: 10px; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">TIPO UNIDAD </td>
+        <td align="center" width="265" style="font-size: 10px; font-weight: bold; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">' . $datos['tipo_unidad'] . '</td>
+    </tr>
+    <tr>
+        <td align="left" width="150" style="font-size: 10px;;"> </td>
+    </tr>
+    <tr>
         <td align="center" width="530" style="font-size: 10px; border-top-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-style: solid;">PROGRAMACIÓN TURÍSTICA</td>
     </tr>
     <tr>

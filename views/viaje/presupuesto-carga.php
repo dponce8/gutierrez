@@ -70,8 +70,24 @@
         <input id="fecha_vto" type="date" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? date("Y-m-d", strtotime($infoPresupuesto['fecha_vto'])) : date("Y-m-d"))?>">
     </div>
     <div class="form-group col-sm-8" style="margin-top: -10px; ">
-        <label style="font-size: 11px; ">Observaciones</label>
+        <label style="font-size: 11px; ">Programación Turística</label>
         <input id="obs" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['obs'] : '')?>">
+    </div>
+</div> 
+
+<div class="row">
+    <div class="form-group col-sm-2" style="margin-top: -10px;">
+        <label style="margin-bottom: 3px; font-size: 11px;">Tipo Unidad</label>
+        <select class="form-control" id="s_tipo_unidad" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+            <option value="0">Tipo ...</option>
+            <?php foreach ($tipoCoche as $p) {?>
+                <option value="<?=$p['id']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['id_tipo_coche'] == $p['id']) ? 'selected' : ''?>><?=$p['tipo']?></option>
+            <?php } ?>
+        </select>
+    </div>
+    <div class="form-group col-sm-10" style="margin-top: -10px; ">
+        <label style="font-size: 11px; ">Observaciones Internas</label>
+        <input id="obs_interna" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['obs_interna'] : '')?>">
     </div>
 </div> 
 
@@ -104,6 +120,9 @@
         }
         if ($('#s_destino').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione Destino.<br>"; 
+        }
+        if ($('#s_tipo_unidad').val() == 0) {
+            goOn = 0; mensaje = mensaje + "Seleccione Tipo Unidad.<br>"; 
         }
         if ($('#direccion_origen').val() == '') {
             goOn = 0; mensaje = mensaje + "Ingrese Dirección de Origen.<br>"; 
@@ -140,10 +159,12 @@
                     "&hora_regreso=" + $('#hora_regreso').val() +
                     "&origen=" + $('#s_origen').val() +
                     "&destino=" + $('#s_destino').val() +
+                    "&tipo_unidad=" + $('#s_tipo_unidad').val() +
                     "&direccion_origen=" + $('#direccion_origen').val() +
                     "&direccion_destino=" + $('#direccion_destino').val() +
                     "&total=" + $('#total').val() +
                     "&obs=" + $('#obs').val() +
+                    "&obs_interna=" + $('#obs_interna').val() +
                     "&pasajeros=" + $('#pasajeros').val() +
                     "&fecha_vto=" + $('#fecha_vto').val() +
                     "&id_presupuesto=" + $('#h_id_presupuesto').val() +

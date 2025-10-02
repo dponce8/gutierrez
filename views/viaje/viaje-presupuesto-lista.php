@@ -9,13 +9,15 @@
             <th style="font-size: 10px; font-weight: bold">Origen</th>
             <th style="font-size: 10px; font-weight: bold">Destino</th>
             <th style="font-size: 10px; font-weight: bold">Pasajeros</th>
+            <th style="font-size: 10px; font-weight: bold">Tipo Unidad</th>
             <th style="font-size: 10px; font-weight: bold">Total</th>
             <th style="font-size: 10px; font-weight: bold">Fecha Salida</th>
             <th style="font-size: 10px; font-weight: bold">Fecha Regreso</th>
             <th style="font-size: 10px; font-weight: bold">Dirección Origen</th>
             <th style="font-size: 10px; font-weight: bold">Dirección Destino</th>
             <th style="font-size: 10px; font-weight: bold">Usuario</th>
-            <th style="font-size: 10px; font-weight: bold">Observaciones</th>
+            <th style="font-size: 10px; font-weight: bold">Prog. Turística</th>
+            <th style="font-size: 10px; font-weight: bold">Obs. Internas</th>
         </tr>
         </thead>
         <tbody>
@@ -30,6 +32,7 @@
                 <td><?= $m['local_origen']?></td>
                 <td><?= $m['local_destino']?></td>
                 <td><?= $m['pasajeros']?></td>
+                <td><?= $m['tipo_unidad']?></td>
                 <td><?= $m['total']?></td>
                 <td><?= date("d/m/Y",strtotime($m['fecha_salida'])).' '.$m['hora_salida']?></td>
                 <td><?= date("d/m/Y",strtotime($m['fecha_regreso'])).' '.$m['hora_regreso']?></td>
@@ -37,6 +40,7 @@
                 <td><?= $m['direccion_destino']?></td>
                 <td><?= $m['usuario']?></td>
                 <td><?= $m['obs']?></td>
+                <td><?= $m['obs_interna']?></td>
             </tr>
         <?php $c++; } ?>    
         </tbody>

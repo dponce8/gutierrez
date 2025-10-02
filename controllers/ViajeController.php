@@ -359,15 +359,17 @@ class ViajeController extends \yii\web\Controller
             $direccion_destino = $request->get('direccion_destino');
             $total = floatval($request->get('total'));
             $obs = $request->get('obs');
+            $obs_interna = $request->get('obs_interna');
+            $tipo_unidad = $request->get('tipo_unidad');
             $id_usuario = Yii::$app->user->identity->id;
             $pasajeros = $request->get('pasajeros');
             $fecha_vto = $request->get('fecha_vto');
             $id_presupuesto = $request->get('id_presupuesto');
             if ($id_presupuesto == 0) {
                 $db->createCommand("insert into presupuesto (id_cliente,fecha, fecha_salida, hora_salida, fecha_regreso, hora_regreso, origen, destino, 
-                direccion_origen, direccion_destino, total, obs, id_usuario, pasajeros, fecha_vto) 
+                direccion_origen, direccion_destino, total, obs, obs_interna, id_usuario, pasajeros, fecha_vto, id_tipo_coche) 
                 values (:cliente,curdate(), :fecha_salida, :hora_salida, :fecha_regreso, :hora_regreso, :origen, :destino, :direccion_origen, 
-                :direccion_destino, :total, :obs, :id_usuario, :pasajeros, :fecha_vto)")
+                :direccion_destino, :total, :obs,:obs_interna, :id_usuario, :pasajeros, :fecha_vto, :id_tipo_coche)")
                 ->bindValue(':cliente', $cliente)
                 ->bindValue(':fecha_salida', $fecha_salida)
                 ->bindValue(':hora_salida', $hora_salida)
@@ -379,9 +381,11 @@ class ViajeController extends \yii\web\Controller
                 ->bindValue(':direccion_destino', $direccion_destino)
                 ->bindValue(':total', $total)
                 ->bindValue(':obs', $obs)
+                ->bindValue(':obs_interna', $obs_interna)
                 ->bindValue(':id_usuario', $id_usuario)
                 ->bindValue(':pasajeros', $pasajeros)
                 ->bindValue(':fecha_vto', $fecha_vto)
+                ->bindValue(':id_tipo_coche', $tipo_unidad)
                 ->execute();
 
                 $nuevo = $db->getLastInsertID();
@@ -392,7 +396,7 @@ class ViajeController extends \yii\web\Controller
                 $db->createCommand("update presupuesto set id_cliente = :cliente, fecha = curdate(), 
                 fecha_salida = :fecha_salida, hora_salida = :hora_salida, fecha_regreso = :fecha_regreso, 
                 hora_regreso = :hora_regreso, origen = :origen, destino = :destino, direccion_origen = :direccion_origen, 
-                direccion_destino = :direccion_destino, total = :total, obs = :obs, id_usuario = :id_usuario, pasajeros = :pasajeros, 
+                direccion_destino = :direccion_destino, total = :total, obs = :obs, obs_interna = :obs_interna, id_usuario = :id_usuario, pasajeros = :pasajeros, id_tipo_coche = :id_tipo_coche,
                 fecha_vto = :fecha_vto, id_estado = :id_estado
                 where id = :id")
                 ->bindValue(':cliente', $cliente)
@@ -406,7 +410,9 @@ class ViajeController extends \yii\web\Controller
                 ->bindValue(':direccion_destino', $direccion_destino)
                 ->bindValue(':total', $total)
                 ->bindValue(':obs', $obs)
+                ->bindValue(':obs_interna', $obs_interna)
                 ->bindValue(':id_usuario', $id_usuario)
+                ->bindValue(':id_tipo_coche', $tipo_unidad)
                 ->bindValue(':pasajeros', $pasajeros)
                 ->bindValue(':fecha_vto', $fecha_vto)
                 ->bindValue(':id', $id_presupuesto)
@@ -427,7 +433,8 @@ class ViajeController extends \yii\web\Controller
         concat(u.apellido,' ',u.nombre) usuario,
         lo.localidad local_origen, ld.localidad local_destino,
         po.provincia pcia_origen, pd.provincia pcia_destino,
-        pao.pais pais_origen, pad.pais pais_destino
+        pao.pais pais_origen, pad.pais pais_destino,
+        ct.tipo tipo_unidad
         from presupuesto v
         join persona p on p.id = v.id_cliente
         left join user u on u.id = v.id_usuario
@@ -437,6 +444,7 @@ class ViajeController extends \yii\web\Controller
         left join provincia pd on pd.id = ld.id_provincia
         left join pais pao on pao.id = po.id_pais
         left join pais pad on pad.id = po.id_pais
+        left join coche_tipo ct on ct.id = v.id_tipo_coche
         where v.id_cliente between :per1 and :per2 
         and v.fecha between :desde and :hasta;")
         ->bindValue(':per1', $per1)
@@ -459,13 +467,15 @@ class ViajeController extends \yii\web\Controller
         join pais pa on pa.id = p.id_pais
         order by pa.pais, p.provincia, l.localidad")
         ->queryAll();
+        $tipoCoche = $db->createCommand("select * from coche_tipo order by tipo")->queryAll();
 
         $infoPresupuesto = null;
         if ($id != 0) {
             $infoPresupuesto = $db->createCommand("select * from presupuesto where id = :id")->bindValue(':id', $id)->queryOne();
         }
 
-        return $this->renderPartial('presupuesto-carga', ['clientes' => $clientes,  'localidades' => $localidades, 'infoPresupuesto' => $infoPresupuesto]);
+        return $this->renderPartial('presupuesto-carga', ['clientes' => $clientes,  'localidades' => $localidades, 
+        'infoPresupuesto' => $infoPresupuesto, 'tipoCoche' => $tipoCoche]);
     }
 
     public function actionPresupuestoImprime($id)
@@ -477,7 +487,8 @@ class ViajeController extends \yii\web\Controller
         lo.localidad local_origen, ld.localidad local_destino,
         po.provincia pcia_origen, pd.provincia pcia_destino,
         pao.pais pais_origen, pad.pais pais_destino, p.cuit,
-        p.domicilio, p.email,p.fijo, p.celular
+        p.domicilio, p.email,p.fijo, p.celular,
+        ct.tipo tipo_unidad
         from presupuesto v
         join persona p on p.id = v.id_cliente
         left join user u on u.id = v.id_usuario
@@ -487,6 +498,7 @@ class ViajeController extends \yii\web\Controller
         left join provincia pd on pd.id = ld.id_provincia
         left join pais pao on pao.id = po.id_pais
         left join pais pad on pad.id = po.id_pais
+        left join coche_tipo ct on ct.id = v.id_tipo_coche
         where v.id = :id")
         ->bindValue(':id', $id)
         ->queryOne();
@@ -528,7 +540,8 @@ class ViajeController extends \yii\web\Controller
             concat(u.apellido,' ',u.nombre) usuario,
             lo.localidad local_origen, ld.localidad local_destino,
             po.provincia pcia_origen, pd.provincia pcia_destino,
-            pao.pais pais_origen, pad.pais pais_destino
+            pao.pais pais_origen, pad.pais pais_destino,
+            ct.tipo tipo_unidad
             from presupuesto v
             join persona p on p.id = v.id_cliente
             left join user u on u.id = v.id_usuario
@@ -538,6 +551,7 @@ class ViajeController extends \yii\web\Controller
             left join provincia pd on pd.id = ld.id_provincia
             left join pais pao on pao.id = po.id_pais
             left join pais pad on pad.id = po.id_pais
+            left join coche_tipo ct on ct.id = v.id_tipo_coche
             where v.id = :nro and v.id_estado = 1;")
             ->bindValue(':nro', $nro)
             ->queryAll();
@@ -552,7 +566,8 @@ class ViajeController extends \yii\web\Controller
             concat(u.apellido,' ',u.nombre) usuario,
             lo.localidad local_origen, ld.localidad local_destino,
             po.provincia pcia_origen, pd.provincia pcia_destino,
-            pao.pais pais_origen, pad.pais pais_destino
+            pao.pais pais_origen, pad.pais pais_destino,
+            ct.tipo tipo_unidad
             from presupuesto v
             join persona p on p.id = v.id_cliente
             left join user u on u.id = v.id_usuario
@@ -562,6 +577,7 @@ class ViajeController extends \yii\web\Controller
             left join provincia pd on pd.id = ld.id_provincia
             left join pais pao on pao.id = po.id_pais
             left join pais pad on pad.id = po.id_pais
+            left join coche_tipo ct on ct.id = v.id_tipo_coche
             where v.id_cliente between :per1 and :per2 and v.id_estado = 1")
             ->bindValue(':per1', $per1)
             ->bindValue(':per2', $per2)
