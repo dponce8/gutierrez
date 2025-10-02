@@ -61,7 +61,7 @@ class TarjetaSearch extends Tarjeta
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
+            'tarjeta.id' => $this->id,
             'tipo' => $this->tipo,
         ]);
 

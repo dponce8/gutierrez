@@ -62,7 +62,7 @@ class ConceptoSearch extends Concepto
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
+            'concepto.id' => $this->id,
             'id_tipo' => $this->id_tipo,
             'sistema' => $this->sistema,
         ]);

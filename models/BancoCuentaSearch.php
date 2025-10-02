@@ -62,7 +62,7 @@ class BancoCuentaSearch extends BancoCuenta
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
+            'banco_cuenta.id' => $this->id,
             'id_banco' => $this->id_banco,
             'id_sucursal' => $this->id_sucursal,
         ]);
