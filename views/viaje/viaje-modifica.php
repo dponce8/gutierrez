@@ -17,7 +17,7 @@
     </div>
 </div> 
 <div class="row">
-    <div class="form-group col-sm-2" style="margin-top: -10px;">
+    <div class="form-group col-sm-2" style="margin-top: 0px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Coche</label>
         <select class="form-control my-chosen-select" id="s_coche" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Coche ...</option>
@@ -26,7 +26,7 @@
             <?php } ?>
         </select>
     </div>
-    <div class="form-group col-sm-4" style="margin-top: -10px;">
+    <div class="form-group col-sm-4" style="margin-top: 0px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Seleccione 1° Chofer</label>
         <select class="form-control my-chosen-select" id="s_chofer_1" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Chofer ...</option>
@@ -35,7 +35,7 @@
             <?php } ?>
         </select>
     </div>
-    <div class="form-group col-sm-4" style="margin-top: -10px;">
+    <div class="form-group col-sm-4" style="margin-top: 0px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Seleccione 2° Chofer</label>
         <select class="form-control my-chosen-select" id="s_chofer_2" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Chofer ...</option>
@@ -47,7 +47,7 @@
 </div> 
 
 <div class="row">
-    <div class="form-group col-sm-12" style="margin-top: -10px; ">
+    <div class="form-group col-sm-12" style="margin-top: 0px; ">
         <label style="font-size: 11px; ">Observaciones</label>
         <input id="obs" type="text" class="form-control" <?php if (isset($infoViaje) && !empty($infoViaje) && $infoViaje['obs']) {echo 'value="'.$infoViaje['obs'].'"';}?>>
     </div>
