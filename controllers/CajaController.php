@@ -54,10 +54,11 @@ class CajaController extends \yii\web\Controller
         $cuentas = $db->createCommand("select * from banco_cuenta")->queryAll();
         $creditos = $db->createCommand("select * from tarjeta where tipo = 1")->queryAll();
         $debitos = $db->createCommand("select * from tarjeta where tipo = 2")->queryAll();
+        $facturas = $db->createCommand("select * from factura_tipo")->queryAll();
 
         return $this->renderPartial('movimiento-carga', ['conceptos' => $conceptos, 
         'medios' => $medios, 'cajas' => $cajas, 
-        'cuentas' => $cuentas, 'creditos' => $creditos, 'debitos' => $debitos]);
+        'cuentas' => $cuentas, 'creditos' => $creditos, 'debitos' => $debitos, 'facturas' => $facturas]);
     }
 
     public function actionMovimientoLista($concepto, $persona, $desde, $hasta, $caja)
@@ -84,12 +85,13 @@ class CajaController extends \yii\web\Controller
         }
 
         $listado = $db->createCommand("select m.*,p.id,m.id idMov,concat(p.apellido,' ', p.nombre) persona, c.concepto, ca.empresa,
-        concat(u.apellido,' ',u.nombre) usuario
+        concat(u.apellido,' ',u.nombre) usuario, ft.tipo tipo_factura
         from movimiento m         
         join concepto c on c.id = m.id_concepto
         join sueldosempresas ca on ca.idEmpresa = m.id_empresa
         join user u on u.id = m.id_usuario
         left join persona p on p.id = m.id_persona
+        left join factura_tipo ft on ft.id = m.id_factura
         where m.id_empresa between :caj1 and :caj2 and m.id_concepto between :con1 and :con2 
         and m.id_persona between :per1 and :per2 and m.fecha between :desde and :hasta 
         order by m.fecha desc, m.hora desc")
@@ -120,7 +122,7 @@ class CajaController extends \yii\web\Controller
         return $nroRecibo;
     }
 
-    public function actionMovimientoGuarda($caja, $concepto, $persona, $importe, $obs, $id_viaje = 0)
+    public function actionMovimientoGuarda($caja, $concepto, $persona, $importe, $obs, $factura, $nro_factura, $id_viaje = 0)
     {
         $db = Yii::$app->db;
         $salida = 0;
@@ -131,8 +133,8 @@ class CajaController extends \yii\web\Controller
 
         $nroRecibo = self::getNroComprobante($tipoConcepto);    
 
-        $db->createCommand("insert into movimiento (id_empresa,fecha, hora, id_concepto, id_persona, id_usuario, importe, obs, nro_comprobante, id_viaje) 
-        values(:caja,curdate(), curtime(), :id_concepto, :id_persona, :id_usuario, :importe,:obs, :nroRecibo, :id_viaje)")
+        $db->createCommand("insert into movimiento (id_empresa,fecha, hora, id_concepto, id_persona, id_usuario, importe, obs, nro_comprobante, id_viaje, id_factura,nro_factura) 
+        values(:caja,curdate(), curtime(), :id_concepto, :id_persona, :id_usuario, :importe,:obs, :nroRecibo, :id_viaje, :id_factura, :nro_factura)")
         ->bindValue(':id_concepto', $concepto)
         ->bindValue(':id_persona', $persona)
         ->bindValue(':id_usuario', Yii::$app->user->identity->id)
@@ -141,6 +143,8 @@ class CajaController extends \yii\web\Controller
         ->bindValue(':caja', $caja)
         ->bindValue(':nroRecibo', $nroRecibo)
         ->bindValue(':id_viaje', $id_viaje)
+        ->bindValue(':id_factura', $factura)
+        ->bindValue(':nro_factura', $nro_factura)
         ->execute();
 
         $ultMov = $db->createCommand("select max(id) ultId from movimiento;")->queryOne();

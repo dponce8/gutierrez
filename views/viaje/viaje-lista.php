@@ -4,6 +4,7 @@
         <tr style="font-size: 10px;">
             <th style="font-size: 10px; font-weight: bold">#</th>
             <th style="font-size: 10px; font-weight: bold"></th>
+            <th style="font-size: 10px; font-weight: bold"></th>
             <th style="font-size: 10px; font-weight: bold">Fecha</th>
             <th style="font-size: 10px; font-weight: bold">Cliente</th>
             <th style="font-size: 10px; font-weight: bold">Origen</th>
@@ -29,6 +30,9 @@
                 <td><?= $c ?></td>
                 <td>
                     <span style="color: red; cursor: pointer; font-size: 16px;" title="Elimimnar Viaje" onclick="eliminarViaje(<?= $m['id']?>)"><i class="fa fa-trash"></i></span>  
+                </td>
+                <td>
+                    <span style="color: green; cursor: pointer; font-size: 16px;" title="Modificar Viaje" onclick="modificarViaje(<?= $m['id']?>)"><i class="fa fa-edit"></i></span>  
                 </td>
                 <td><?= date("d/m/Y",strtotime($m['fecha']))?></td>
                 <td><?= $m['cliente']?></td>
@@ -58,6 +62,7 @@
 <script>
     $(document).ready(function() {
         $('#movModal').modal('hide');
+        $('#modViajeModal').modal('hide');
     });
 
     function eliminarViaje(id) {

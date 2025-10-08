@@ -23,14 +23,25 @@
                 
             </div>
         </div>   
+        <div class="row" style="padding-left: 5px; padding-right: 5px;">   
+            <div class="form-group col-sm-6" style="margin-top: -10px;">
+                <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Tipo Factura</label>
+                <select class="form-control" id="s_factura" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+                    <option value="0">Tipo ...</option>
+                    <?php foreach ($facturas as $s) {?>
+                        <option value="<?=$s['id']?>"><?=$s['tipo']?></option>
+                    <?php } ?>
+                </select>
+            </div>
+            <div class="form-group col-sm-6" style="margin-top: -10px; ">
+                <label style="font-size: 11px; ">N° Factura</label>
+                <input id="nro_factura" type="text" class="form-control ">
+            </div>
+        </div>   
         <div class="row" style="padding-left: 5px; padding-right: 5px;">            
-            <div class="form-group col-sm-8" style="margin-top: -10px; ">
+            <div class="form-group col-sm-12" style="margin-top: -10px; ">
                 <label style="font-size: 11px; ">Observaciones</label>
                 <input id="obs" type="text" class="form-control ">
-            </div>
-            <div class="form-group col-sm-4" style="margin-top: -10px; ">
-                <label style="font-size: 11px; ">N° Recibo</label>
-                <input id="nro_recibo" type="text" class="form-control ">
             </div>
         </div>   
         <div class="row" style="padding-left: 5px; padding-right: 5px;">  
@@ -275,6 +286,12 @@
         if ($('#total_operacion').val() == '0,00' || $('#total_operacion').val() == '0,0' || $('#total_operacion').val() == '') {
             goOn = 0; mensaje = mensaje + "La operación no tiene un importe.<br>"; 
         }
+        if ($('#s_factura').val() == 0) {
+            goOn = 0; mensaje = mensaje + "Seleccione Tipo de Factura.<br>"; 
+        }
+        if ($('#nro_factura').val() == '') {
+            goOn = 0; mensaje = mensaje + "Ingrese N° Factura.<br>"; 
+        }
 
         if (goOn == 1) {
             Swal.fire({
@@ -290,7 +307,9 @@
                     $.post("index.php?r=caja/movimiento-guarda&caja=" + $('#s_caja').val() +
                     "&concepto=" + $('#s_concepto').val() +"&persona=" + $('#s_persona').val() +
                     "&importe=" + $('#total_operacion').val().replace(/\./g, '').replace(/,/g, '.') + 
-                    "&obs=" + $('#obs').val() + "&id_viaje=" + $('#s_viaje').val()
+                    "&obs=" + $('#obs').val()  +
+                    "&factura=" + $('#s_factura').val() + "&nro_factura=" + $('#nro_factura').val()
+                    + "&id_viaje=" + $('#s_viaje').val()
                     , function (response) {
                         jQuery("#d_mov_lista").html(response);
                     });

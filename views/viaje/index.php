@@ -12,7 +12,7 @@
         <select class="form-control my-chosen-select" id="s_persona_filtro" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
             <option value="0">Cualquier Persona ...</option>
             <?php foreach ($personas as $p) {?>
-                <option value="<?=$p['id']?>"><?=$p['persona']?></option>
+                <option value="<?=$p['id']?>" ><?=$p['persona']?></option>
             <?php } ?>
         </select>
     </div>
@@ -47,6 +47,27 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
         <button type="button" class="btn btn-primary" id="btnCargarViaje" onClick="cargarViaje()">Cargar Viaje</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modViajeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="movTitulo">Modificar Viaje</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="contenidoModViajeModal">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+        <button type="button" class="btn btn-primary" id="btnModificarViaje" onClick="guardarModViaje()">Modificar Viaje</button>
       </div>
     </div>
   </div>
@@ -107,5 +128,14 @@
 
         $('#movModal').modal('show');
     } 
+
+    function modificarViaje(id) {
+        $("#movTitulo").html('Modificar Viaje');
+        $.post("index.php?r=viaje/viaje-modifica&id=" + id , function (response) {
+            jQuery("#contenidoModViajeModal").html(response);
+        });
+
+        $('#modViajeModal').modal('show');
+    }  
       
 </script>

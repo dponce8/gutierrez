@@ -9,8 +9,10 @@
             <th style="font-size: 10px; font-weight: bold">Fecha</th>
             <th style="font-size: 10px; font-weight: bold">Hora</th>
             <th style="font-size: 10px; font-weight: bold">Concepto</th>
-            <th style="font-size: 10px; font-weight: bold">Nro. Recibo</th>
+            <th style="font-size: 10px; font-weight: bold">Nro. Comprobante</th>
             <th style="font-size: 10px; font-weight: bold">Importe</th>
+            <th style="font-size: 10px; font-weight: bold">Tipo Factura</th>
+            <th style="font-size: 10px; font-weight: bold">Nro. Factura</th>
             <th style="font-size: 10px; font-weight: bold">Persona</th>
             <th style="font-size: 10px; font-weight: bold">Usuario</th>
         </tr>
@@ -33,6 +35,8 @@
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['concepto']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['nro_comprobante']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)" style="text-align: right;"><?= number_format(floatval($m['importe']), 2, ',', '.')?></td>
+                <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['tipo_factura']?></td>
+                <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['nro_factura']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['persona']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['usuario']?></td>
             </tr>

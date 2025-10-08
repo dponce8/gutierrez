@@ -252,6 +252,135 @@ class ViajeController extends \yii\web\Controller
             ]);
         }
 
+        if ($request->get('modificar') == 1) {
+            $transaction = \Yii::$app->db->beginTransaction();
+
+            $idViaje = $request->get('idViaje');
+            $cliente = $request->get('cliente');
+            $fecha_salida = $request->get('fecha_salida');
+            $hora_salida = $request->get('hora_salida');
+            $fecha_regreso = $request->get('fecha_regreso');
+            $hora_regreso = $request->get('hora_regreso');
+            $obs = $request->get('obs');
+            $chofer_1 = $request->get('chofer_1');
+            $chofer_2 = $request->get('chofer_2');
+            $coche = $request->get('coche');
+
+            // VALIDACIONES DE DISPONIBILIDAD
+            $errores = [];
+            
+            // Verificar disponibilidad del vehículo
+            if (!empty($coche) && $coche > 0) {
+                $vehiculoOcupado = $db->createCommand("
+                    SELECT COUNT(*) as ocupado 
+                    FROM viaje 
+                    WHERE id_vehiculo = :vehiculo 
+                    AND (
+                        -- El nuevo viaje inicia antes de que termine un viaje existente
+                        (CONCAT(:fecha_salida, ' ', :hora_salida) < CONCAT(fecha_regreso, ' ', hora_regreso))
+                        AND
+                        -- El nuevo viaje termina después de que inicie un viaje existente
+                        (CONCAT(:fecha_regreso, ' ', :hora_regreso) > CONCAT(fecha_salida, ' ', hora_salida))
+                    )
+                ")
+                ->bindValue(':vehiculo', $coche)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
+                ->queryScalar();
+                
+                if ($vehiculoOcupado > 0) {
+                    $errores[] = "El vehículo seleccionado ya está asignado a otro viaje en las fechas y horas indicadas.";
+                }
+            }
+            
+            // Verificar disponibilidad del chofer 1
+            if (!empty($chofer_1) && $chofer_1 > 0) {
+                $chofer1Ocupado = $db->createCommand("
+                    SELECT COUNT(*) as ocupado 
+                    FROM viaje 
+                    WHERE (id_chofer_1 = :chofer OR id_chofer_2 = :chofer)
+                    AND (
+                        -- El nuevo viaje inicia antes de que termine un viaje existente
+                        (CONCAT(:fecha_salida, ' ', :hora_salida) < CONCAT(fecha_regreso, ' ', hora_regreso))
+                        AND
+                        -- El nuevo viaje termina después de que inicie un viaje existente
+                        (CONCAT(:fecha_regreso, ' ', :hora_regreso) > CONCAT(fecha_salida, ' ', hora_salida))
+                    )
+                ")
+                ->bindValue(':chofer', $chofer_1)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
+                ->queryScalar();
+                
+                if ($chofer1Ocupado > 0) {
+                    $errores[] = "El primer chofer seleccionado ya está asignado a otro viaje en las fechas y horas indicadas.";
+                }
+            }
+            
+            // Verificar disponibilidad del chofer 2
+            if (!empty($chofer_2) && $chofer_2 > 0) {
+                $chofer2Ocupado = $db->createCommand("
+                    SELECT COUNT(*) as ocupado 
+                    FROM viaje 
+                    WHERE (id_chofer_1 = :chofer OR id_chofer_2 = :chofer)
+                    AND (
+                        -- El nuevo viaje inicia antes de que termine un viaje existente
+                        (CONCAT(:fecha_salida, ' ', :hora_salida) < CONCAT(fecha_regreso, ' ', hora_regreso))
+                        AND
+                        -- El nuevo viaje termina después de que inicie un viaje existente
+                        (CONCAT(:fecha_regreso, ' ', :hora_regreso) > CONCAT(fecha_salida, ' ', hora_salida))
+                    )
+                ")
+                ->bindValue(':chofer', $chofer_2)
+                ->bindValue(':fecha_salida', $fecha_salida)
+                ->bindValue(':hora_salida', $hora_salida)
+                ->bindValue(':fecha_regreso', $fecha_regreso)
+                ->bindValue(':hora_regreso', $hora_regreso)
+                ->queryScalar();
+                
+                if ($chofer2Ocupado > 0) {
+                    $errores[] = "El segundo chofer seleccionado ya está asignado a otro viaje en las fechas y horas indicadas.";
+                }
+            }
+            
+            // Si hay errores, no continuar con la inserción
+            if (!empty($errores)) {
+                $transaction->rollBack();
+                return json_encode([
+                    'success' => false,
+                    'errores' => $errores,
+                    'mensaje' => 'No se puede guardar el viaje debido a conflictos de asignación.'
+                ]);
+            }
+
+            $db->createCommand("update viaje set fecha_salida = :fecha_salida, hora_salida = :hora_salida, fecha_regreso = :fecha_regreso, hora_regreso = :hora_regreso, 
+            id_chofer_1 = :chofer_1, id_chofer_2 = :chofer_2, id_vehiculo = :id_vehiculo, obs = :obs
+            where id = :id")
+            ->bindValue(':id', $idViaje)
+            ->bindValue(':fecha_salida', $fecha_salida)
+            ->bindValue(':hora_salida', $hora_salida)
+            ->bindValue(':fecha_regreso', $fecha_regreso)
+            ->bindValue(':hora_regreso', $hora_regreso)
+            ->bindValue(':chofer_1', $chofer_1)
+            ->bindValue(':chofer_2', $chofer_2)
+            ->bindValue(':id_vehiculo', $coche)
+            ->bindValue(':obs', $obs)
+            ->execute();
+
+            $transaction->commit();
+            
+            // Respuesta exitosa
+            return json_encode([
+                'success' => true,
+                'mensaje' => 'Viaje guardado exitosamente.',
+                'viaje_id' => $idViaje
+            ]);
+        }
+
         $per1 = $idPersona; $per2 = $idPersona;
         if ($idPersona == 0) {
             $per1 = 1;
@@ -658,6 +787,20 @@ class ViajeController extends \yii\web\Controller
         ->queryAll();
 
         return $this->render('saldo', ['personas' => $personas, 'empresas' => $empresas]);
+    }
+
+    public function actionViajeModifica($id)
+    {
+        $db = Yii::$app->db;
+
+        $infoViaje = $db->createCommand("select * from viaje where id = :id;")
+        ->bindValue(':id', $id)
+        ->queryOne();
+
+        $choferes = $db->createCommand("select idempleado, concat(apellido,' ',nombre) as chofer from empleados where idtipoempleado = 2 order by apellido, nombre")->queryAll();
+        $coches = $db->createCommand("select id, numero_interno, asientos from vehiculo order by numero_interno")->queryAll();
+
+        return $this->renderPartial('viaje-modifica', ['infoViaje' => $infoViaje, 'choferes' => $choferes,'coches' => $coches]);
     }
 
     public function actionSaldoLista($idPersona, $empresa)  
