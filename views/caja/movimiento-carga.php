@@ -25,7 +25,7 @@
         </div>   
         <div class="row" style="padding-left: 5px; padding-right: 5px;">   
             <div class="form-group col-sm-6" style="margin-top: -10px;">
-                <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Tipo Factura</label>
+                <label style="margin-bottom: 0px; font-size: 11px;" for="numero">Tipo Comp.</label>
                 <select class="form-control" id="s_factura" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
                     <option value="0">Tipo ...</option>
                     <?php foreach ($facturas as $s) {?>
@@ -34,7 +34,7 @@
                 </select>
             </div>
             <div class="form-group col-sm-6" style="margin-top: -10px; ">
-                <label style="font-size: 11px; ">N° Factura</label>
+                <label style="font-size: 11px; ">N° Comp.</label>
                 <input id="nro_factura" type="text" class="form-control ">
             </div>
         </div>   
