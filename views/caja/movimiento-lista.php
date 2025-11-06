@@ -5,7 +5,7 @@
             <th style="font-size: 10px; font-weight: bold">#</th>
             <th style="font-size: 10px; font-weight: bold"></th>
             <th style="font-size: 10px; font-weight: bold"></th>
-            <th style="font-size: 10px; font-weight: bold">Caja</th>
+            <th style="font-size: 10px; font-weight: bold">Empresa</th>
             <th style="font-size: 10px; font-weight: bold">Fecha</th>
             <th style="font-size: 10px; font-weight: bold">Hora</th>
             <th style="font-size: 10px; font-weight: bold">Concepto</th>

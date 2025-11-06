@@ -828,15 +828,14 @@ class CajaController extends \yii\web\Controller
         $per1 = $persona; $per2 = $persona;
         if ($persona == 0) {$per1 = 0; $per2 = 10000;}
 
-        $listado = $db->createCommand("select m.*,p.id,m.id idMov,concat(p.apellido,' ', p.nombre) persona, c.concepto, ca.caja,
+        $listado = $db->createCommand("select m.*,p.id,m.id idMov,concat(p.apellido,' ', p.nombre) persona, c.concepto, ca.empresa,
         f.tipo tipo_factura, concat(u.apellido,' ',u.nombre) usuario
         from movimiento m         
         join concepto c on c.id = m.id_concepto
-        join caja ca on ca.id = m.id_caja
-        join user u on u.id = m.id_usuario
+join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.id = m.id_usuario
         left join factura_tipo f on f.id = m.id_factura
         left join persona p on p.id = m.id_persona
-        where m.id_caja between :caj1 and :caj2 and m.id_concepto between :con1 and :con2 
+        where m.id_empresa between :caj1 and :caj2 and m.id_concepto between :con1 and :con2 
         and m.id_persona between :per1 and :per2 and m.fecha between :desde and :hasta 
         order by m.fecha desc, m.hora desc")
         ->bindValue(':caj1', $caja1)
@@ -849,7 +848,7 @@ class CajaController extends \yii\web\Controller
         ->bindValue(':hasta', $hasta)
         ->queryAll();
 
-        require_once('../vendor/TCPDF-main/tcpdf.php');
+        require_once('../vendor/tcpdf/tcpdf.php');        
         $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('DEP');
