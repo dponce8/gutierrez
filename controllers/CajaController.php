@@ -525,7 +525,7 @@ class CajaController extends \yii\web\Controller
     {
         $db = Yii::$app->db;
 
-        $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
+        /*$datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
         c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
         l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
         from movimiento m join persona p on p.id = m.id_persona
@@ -537,7 +537,7 @@ class CajaController extends \yii\web\Controller
         ->bindValue(':id', $id)
         ->queryOne();
 
-        /*if ($datos['cae'] == '' or $datos['cae'] == null) {
+        if ($datos['cae'] == '' or $datos['cae'] == null) {
             $resultadoCae = self::getCaeDirecto($id, $datos['tipo_afip']);
             
             // Si hay error temporal de AFIP, mostrar mensaje amigable
