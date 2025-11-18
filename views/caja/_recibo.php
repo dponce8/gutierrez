@@ -252,7 +252,7 @@ if ($tipoConcepto == 2) {    // Orden de pago
             </td>
         </tr>   
         <tr>
-            <td width="540" height="150" style="font-size: 9px; border-left-style: solid; solid; border-right-style: solid; solid; border-bottom-style: solid; ">
+            <td width="540" height="120" style="font-size: 9px; border-left-style: solid; solid; border-right-style: solid; solid; border-bottom-style: solid; ">
                 
             </td>
         </tr>       
@@ -275,15 +275,6 @@ if ($tipoConcepto == 2) {    // Orden de pago
                     
                 foreach ($medios as $g) {
                     $detalle = '';
-                    /*if ($g['id_medio'] == 2 or $g['id_medio'] == 3) {
-                        $detalle = 'Tarjeta: '.$g['tarjeta'];
-                    }
-                    if ($g['id_medio'] == 4) {
-                        $detalle =  'Cuenta: '.$g['cuenta'].' Banco: '.$g['banco_cta'];
-                    }
-                    if ($g['id_medio'] == 5) {
-                        $detalle =  '['.$g['tipo'].'] '.' N°: '.$g['nro_cheque'].' Banco: '.$g['banco'];
-                    }*/
                 $tbl = $tbl .'
                     <tr>
                         <td align="left" width="90" style="font-size: 9px;">'.$g['medio'].'</td>
@@ -335,7 +326,18 @@ if ($tipoConcepto == 2) {    // Orden de pago
             <td width="540" style="font-size: 8px;">
                 Usuario: '.$datos['usuario'].'
             </td>
-        </tr>           
+        </tr>         
+        <tr>
+            <td width="540" align="center" style="font-size:15px"></td>
+        </tr>';
+        // Mostrar CAE y fecha de vencimiento solo si el CAE existe y no está vacío
+        if ($datos['cae'] != null && $datos['cae'] != '') {
+            $tbl .= '
+            <tr>
+                <td width="540" align="center" style="font-size:9px">CAE: ' . $datos['cae'] . ' Fecha Vto: ' . date("d/m/Y", strtotime($datos['fechavto'])) . '</td>
+            </tr>';
+        }
+        $tbl .= '  
         </table>';
     echo $tbl; 
 }

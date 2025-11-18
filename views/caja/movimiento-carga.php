@@ -264,10 +264,6 @@
     function cargarMovimiento() {
         var goOn =1;
         var mensaje = ""; 
-        
-        let select = document.getElementById("s_concepto");
-        let selectedOption = select.options[select.selectedIndex];
-        let persona = selectedOption.dataset.persona;
 
         console.log("Persona seleccionada:", persona);
 
@@ -277,7 +273,7 @@
         if ($('#s_concepto').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione Concepto.<br>"; 
         }
-        if ($('#s_concepto').val() == 4 && $('#nro_recibo').val() == '' && persona == 1) {
+        if ($('#s_concepto').val() == 4 && $('#nro_recibo').val() == '') {
             goOn = 0; mensaje = mensaje + "Ingrese N° Recibo.<br>"; 
         }
         if ($('#s_persona').val() == 0 && $('#s_concepto').val() != 5 && persona == 1) {

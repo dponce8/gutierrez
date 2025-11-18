@@ -8,6 +8,7 @@ use Yii;
 use TCPDF;
 use DateTime;
 use DateTimeZone;
+use app\commands\AfipWsaaService;
 
 class CajaController extends \yii\web\Controller
 {
@@ -75,6 +76,23 @@ class CajaController extends \yii\web\Controller
         if ($persona == 0) {$per1 = 0; $per2 = 10000;}
 
         if ($request->get('anular') == 1) {
+            $transaction = \Yii::$app->db->beginTransaction();
+            $datosAnulacion = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
+            c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
+            l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
+            from movimiento m join persona p on p.id = m.id_persona
+            join concepto c on c.id = m.id_concepto
+            join user u on u.id = m.id_usuario
+            join factura_tipo ft on ft.id = m.id_factura
+            left join localidades l on l.idlocalidad = p.id_localidad
+            where m.id = :id;")
+            ->bindValue(':id', $idMov)
+            ->queryOne();
+
+            if (($datosAnulacion['cae'] != null or $datosAnulacion['cae'] != '') and $datosAnulacion['nota_afip'] > 0) {
+                $resultadoCae = self::getCaeDirecto($idMov, $datosAnulacion['nota_afip']);
+            }
+
             $db->createCommand("update movimiento set estado = 0 where id = :idMov")
             ->bindValue(':idMov', $idMov)
             ->execute();
@@ -82,6 +100,8 @@ class CajaController extends \yii\web\Controller
             $db->createCommand("delete from persona_movimiento where id_movimiento_caja = :idMov")
             ->bindValue(':idMov', $idMov)
             ->execute();
+
+            $transaction->commit();
         }
 
         $listado = $db->createCommand("select m.*,p.id,m.id idMov,concat(p.apellido,' ', p.nombre) persona, c.concepto, ca.empresa,
@@ -507,10 +527,32 @@ class CajaController extends \yii\web\Controller
 
         $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
         c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
-        l.localidad, p.cuit
+        l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
         from movimiento m join persona p on p.id = m.id_persona
         join concepto c on c.id = m.id_concepto
         join user u on u.id = m.id_usuario
+        join factura_tipo ft on ft.id = m.id_factura
+        left join localidades l on l.idlocalidad = p.id_localidad
+        where m.id = :id;")
+        ->bindValue(':id', $id)
+        ->queryOne();
+
+        /*if ($datos['cae'] == '' or $datos['cae'] == null) {
+            $resultadoCae = self::getCaeDirecto($id, $datos['tipo_afip']);
+            
+            // Si hay error temporal de AFIP, mostrar mensaje amigable
+            if (is_array($resultadoCae) && isset($resultadoCae['error']) && $resultadoCae['mostrar_amigable']) {
+                Yii::$app->session->setFlash('warning', $resultadoCae['mensaje']);
+            }
+        }*/
+
+        $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
+        c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
+        l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
+        from movimiento m join persona p on p.id = m.id_persona
+        join concepto c on c.id = m.id_concepto
+        join user u on u.id = m.id_usuario
+        join factura_tipo ft on ft.id = m.id_factura
         left join localidades l on l.idlocalidad = p.id_localidad
         where m.id = :id;")
         ->bindValue(':id', $id)
@@ -549,6 +591,10 @@ class CajaController extends \yii\web\Controller
         $tbl = $this->renderPartial('_recibo', ['datos' => $datos, 'medios' => $medios, 'tipoConcepto' => $tipoConcepto]);
         $pdf->writeHTML($tbl, true, false, false, false, '');
         $pdf->SetFont('helvetica', '', 2);
+
+        if ($datos['cae'] != null and $datos['cae'] != '') {
+            $pdf->write1DBarcode($datos['codigobarra'], 'C128', 53, 246, 100, 12, 0.4, array('border' => false), 'N');
+        }
 
         ob_end_clean();
         $pdf->Output('comprobante_'.$id.'.pdf', 'I');
@@ -1382,5 +1428,885 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
         ->queryAll();
 
         return $this->renderPartial('viaje-lista', ['listado' => $listado]);
+    }
+
+    public static function getCaeDirecto($idOp, $tipoCpbte) {
+        $db = Yii::$app->db;   
+
+        $factura = 1;
+
+        $findNota = $db->createCommand("select nota_afip from factura_tipo where nota_afip = :idTipo")
+        ->bindValue(':idTipo', $tipoCpbte)
+        ->queryOne();
+
+        if ($findNota != null) { $factura = 0; }
+
+        try {
+            self::logInfo("Iniciando generación CAE - IdOp: $idOp, Tipo: $tipoCpbte");
+            
+            // 1. Obtener datos de la operación (una sola llamada al SP)
+            $info = $db->createCommand("call afipDatosCae(:idOp);")
+            ->bindValue(':idOp', $idOp)
+            ->queryOne();
+        
+            if (!$info) {
+                throw new \Exception("No se pudieron obtener los datos de la operación $idOp");
+            }
+
+            // 2. Validar y extraer datos requeridos
+            $cuit = $info['cuitAfip'] ?? null;
+            $punto = $info['puntoventaafip'] ?? null;
+            $importe = $info['total'] ?? null;
+            $fecha = $info['fecha'] ?? null;
+            $nroCpbteCae = $info['NroComprobanteCae'] ?? null;
+            $crt_file = $info['crtfile'] ?? null;
+            $key_file = $info['keyfile'] ?? null;
+            $nroDoc = $info['nrodoc'] ?? null;
+
+            // Validar datos críticos
+            if (!$cuit || !$punto || !$importe || !$fecha || !$nroDoc) {
+                throw new \Exception("Faltan datos requeridos: CUIT, punto de venta, importe, fecha o número de documento");
+            }
+
+            // 3. Configuración del servicio WSFE
+            $wsfeUrl = 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL'; // Homologación
+            //$wsfeUrl = 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL'; // Producción
+
+            // Determinar el ambiente (producción vs testing)
+            $esProduccion = strpos($wsfeUrl, 'servicios1.afip.gov.ar') !== false;
+            $ambiente = $esProduccion ? 'produccion' : 'testing';
+            
+            // Intentar cargar certificados desde archivos primero
+            $certDir = __DIR__ . "/../certificates/afip/$ambiente/";
+            $certFile = $certDir . $crt_file;
+            $keyFile = $certDir . $key_file;
+            
+            $crt = null;
+            $key = null;
+            
+            if (file_exists($certFile)) {
+                $crt = file_get_contents($certFile);
+                if ($crt === false || empty(trim($crt))) {
+                    self::logInfo("Advertencia: El archivo de certificado existe pero está vacío: $certFile");
+                    $crt = null;
+                } else {
+                    self::logInfo("Certificado cargado desde archivo: $certFile (tamaño: " . strlen($crt) . " bytes)");
+                }
+            } else {
+                self::logInfo("Archivo de certificado no encontrado: $certFile");
+            }
+            
+            if (file_exists($keyFile)) {
+                $key = file_get_contents($keyFile);
+                if ($key === false || empty(trim($key))) {
+                    self::logInfo("Advertencia: El archivo de clave privada existe pero está vacío: $keyFile");
+                    $key = null;
+                } else {
+                    self::logInfo("Clave privada cargada desde archivo: $keyFile (tamaño: " . strlen($key) . " bytes)");
+                }
+            } else {
+                self::logInfo("Archivo de clave privada no encontrado: $keyFile");
+            }
+            
+            // Si no hay certificados de archivo, intentar cargar desde BD
+            if (empty($crt) && !empty($info['crtfile'])) {
+                $crt = $info['crtfile'];
+                if (!empty(trim($crt))) {
+                    self::logInfo("Certificado cargado desde base de datos (tamaño: " . strlen($crt) . " bytes)");
+                } else {
+                    self::logInfo("Advertencia: El certificado en la base de datos está vacío");
+                    $crt = null;
+                }
+            }
+            
+            if (empty($key) && !empty($info['keyfile'])) {
+                $key = $info['keyfile'];
+                if (!empty(trim($key))) {
+                    self::logInfo("Clave privada cargada desde base de datos (tamaño: " . strlen($key) . " bytes)");
+                } else {
+                    self::logInfo("Advertencia: La clave privada en la base de datos está vacía");
+                    $key = null;
+                }
+            }
+            
+            // Validar que tengamos ambos certificados antes de continuar
+            if (empty($crt)) {
+                throw new \Exception("No se pudo cargar el certificado. Verifique que el archivo exista en: $certFile o que esté guardado en la base de datos.");
+            }
+            
+            if (empty($key)) {
+                throw new \Exception("No se pudo cargar la clave privada. Verifique que el archivo exista en: $keyFile o que esté guardada en la base de datos.");
+            }
+
+            $fechaFormateada = date("Ymd", strtotime($fecha));
+            self::logInfo("Datos extraídos - CUIT: $cuit, Punto: $punto, Importe: $importe, Fecha: $fechaFormateada");
+
+            // 4. Obtener token y signature
+        $salida = self::getTaDirecto($cuit, $crt, $key, $esProduccion);
+
+        if (!isset($salida['token']) || !isset($salida['sign'])) {
+            throw new \Exception("Error al obtener token de autenticación de AFIP");
+        }
+
+        $token = $salida['token'];
+        $sign = $salida['sign'];
+            self::logInfo("Token obtenido correctamente");
+
+        $wsdlPath = self::getWsdlPath($esProduccion ? 'wsfev1' : 'wsfev1-homo');
+        // Definir el endpoint real del servicio
+        $serviceLocation = $esProduccion 
+            ? 'https://servicios1.afip.gov.ar/wsfev1/service.asmx'
+            : 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx';
+        
+        // Log información de depuración
+        self::logInfo("WSDL Path: $wsdlPath");
+        self::logInfo("Service Location: $serviceLocation");
+        self::logInfo("Ambiente: " . ($esProduccion ? 'Producción' : 'Homologación'));
+        
+        // Verificar si el WSDL local existe
+        if (file_exists($wsdlPath)) {
+            self::logInfo("Usando WSDL local: $wsdlPath");
+        } else {
+            self::logInfo("WSDL local no encontrado, usando remoto: $wsdlPath");
+        }
+        
+        // Crear contexto de stream con configuración más permisiva
+        $contextOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT,
+                'ciphers' => 'ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH',
+                'disable_compression' => true,
+                'SNI_enabled' => true,
+            ],
+            'http' => [
+                'user_agent' => 'Mozilla/5.0 (compatible; PHP SOAP Client)',
+                'timeout' => 60,
+                'follow_location' => true,
+                'max_redirects' => 5,
+                'protocol_version' => '1.1',
+                'header' => [
+                    'Connection: keep-alive',
+                    'Accept: text/xml, application/xml, application/soap+xml, text/html, */*',
+                    'Accept-Encoding: identity',
+                    'Content-Type: text/xml; charset=utf-8'
+                ]
+            ]
+        ];
+        
+        $streamContext = stream_context_create($contextOptions);
+        
+        // Verificar conectividad básica usando fsockopen o curl si está disponible
+        self::logInfo("Verificando conectividad al servicio...");
+        $host = parse_url($serviceLocation, PHP_URL_HOST);
+        $port = parse_url($serviceLocation, PHP_URL_PORT) ?: 443;
+        
+        if ($host) {
+            $connection = @fsockopen('ssl://' . $host, $port, $errno, $errstr, 5);
+            if ($connection) {
+                fclose($connection);
+                self::logInfo("Conectividad SSL verificada exitosamente a $host:$port");
+            } else {
+                self::logError("No se pudo establecer conexión SSL a $host:$port - Error $errno: $errstr");
+            }
+        }
+        
+        try {
+            $client = new \SoapClient($wsdlPath, [
+                'soap_version' => SOAP_1_2,
+                'location' => $serviceLocation,
+                'uri' => $serviceLocation,
+                'trace' => 1,
+                'exceptions' => 1,
+                'connection_timeout' => 60,
+                'cache_wsdl' => WSDL_CACHE_NONE,
+                'keep_alive' => true,
+                'compression' => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP,
+                'stream_context' => $streamContext,
+                'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
+                'encoding' => 'UTF-8'
+            ]);
+            self::logInfo("Cliente SOAP creado exitosamente");
+        } catch (\SoapFault $e) {
+            $errorMsg = "Error al crear cliente SOAP: " . $e->getMessage();
+            self::logError($errorMsg);
+            self::logError("Código de error: " . $e->getCode());
+            self::logError("Archivo: " . $e->getFile() . " Línea: " . $e->getLine());
+            
+            // Si el error es de conexión, proporcionar más información
+            if (strpos($e->getMessage(), 'Could not connect') !== false || 
+                strpos($e->getMessage(), 'Connection refused') !== false ||
+                strpos($e->getMessage(), 'SSL') !== false ||
+                strpos($e->getMessage(), 'TLS') !== false) {
+                throw new \Exception("No se pudo conectar al servicio de AFIP. " .
+                    "Verifique:\n" .
+                    "1. Conectividad a internet\n" .
+                    "2. Firewall/proxy que permita conexiones a *.afip.gov.ar\n" .
+                    "3. Que el archivo WSDL local exista en: " . dirname($wsdlPath) . "\n" .
+                    "4. URL del servicio: $serviceLocation\n" .
+                    "5. Versión de PHP y extensiones SSL/TLS instaladas\n" .
+                    "Error original: " . $e->getMessage() . " (Código: " . $e->getCode() . ")");
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            $errorMsg = "Error inesperado al crear cliente SOAP: " . $e->getMessage();
+            self::logError($errorMsg);
+            throw $e;
+        }
+
+            // 6. Obtener el último número de comprobante
+        $paramsUltimo = [
+            'Auth' => [
+                'Token' => $token,
+                'Sign' => $sign,
+                'Cuit' => $cuit
+            ],
+                'PtoVta' => (int)$punto,
+                'CbteTipo' => (int)$tipoCpbte
+        ];
+
+        try {
+            self::logInfo("Llamando a FECompUltimoAutorizado...");
+            $response = $client->FECompUltimoAutorizado($paramsUltimo);
+            self::logInfo("Respuesta recibida exitosamente");
+        } catch (\SoapFault $e) {
+            $errorMsg = "Error en FECompUltimoAutorizado: " . $e->getMessage();
+            self::logError($errorMsg);
+            
+            // Log del request y response si está disponible
+            if (isset($client)) {
+                try {
+                    self::logError("Request: " . $client->__getLastRequest());
+                    self::logError("Response: " . $client->__getLastResponse());
+                } catch (\Exception $logEx) {
+                    // Ignorar errores al obtener el log
+                }
+            }
+            
+            // Si el error es de conexión, proporcionar más información
+            if (strpos($e->getMessage(), 'Could not connect') !== false || 
+                strpos($e->getMessage(), 'Connection refused') !== false ||
+                strpos($e->getMessage(), 'Connection timed out') !== false) {
+                throw new \Exception("No se pudo conectar al servicio de AFIP. " .
+                    "Verifique:\n" .
+                    "1. Conectividad a internet\n" .
+                    "2. Firewall/proxy que permita conexiones HTTPS a *.afip.gov.ar (puerto 443)\n" .
+                    "3. Que el archivo WSDL local exista en: " . dirname($wsdlPath) . "\n" .
+                    "4. URL del servicio: $serviceLocation\n" .
+                    "5. WSDL usado: $wsdlPath\n" .
+                    "Error original: " . $e->getMessage());
+            }
+            throw $e;
+        }
+            
+        if (!isset($response->FECompUltimoAutorizadoResult->CbteNro)) {
+            throw new \Exception("Error al obtener último número de comprobante para punto $punto tipo $tipoCpbte");
+        }
+            
+        $ultimo = $response->FECompUltimoAutorizadoResult->CbteNro;
+        $proximo = $ultimo + 1;
+        self::logInfo("Último comprobante: $ultimo, Próximo: $proximo");
+
+        // 7. Armar la factura a emitir según el tipo
+        $datos = null;
+            
+        if ($factura == 1) {
+            $importeTotal = (float)$importe;
+            $importeNeto = (float)$importe;
+            $importeIVA = 0;
+
+            if ((int)$tipoCpbte == 1 or (int)$tipoCpbte == 6) {
+                $importeTotal = number_format((float)$importe, 2, '.', '');
+                $importeNeto = number_format((float)$importe /1.21, 2, '.', '');
+                $importeIVA = number_format((float)($importe - $importeNeto), 2, '.', '');
+            }
+
+            $datos = [
+                'Auth' => [
+                    'Token' => $token,
+                    'Sign' => $sign,
+                    'Cuit' => $cuit
+                ],
+                'FeCAEReq' => [
+                    'FeCabReq' => [
+                        'CantReg' => 1,
+                            'PtoVta' => (int)$punto,
+                            'CbteTipo' => (int)$tipoCpbte
+                    ],
+                    'FeDetReq' => [
+                        'FECAEDetRequest' => [
+                            "Concepto" => 2,
+                            "DocTipo" => 80, // 96 = CUIT | 80 = DNI
+                            "DocNro" => (int)$nroDoc,
+                            "CondicionIVAReceptorId" => $tipoCpbte == 1 ? 1 : 5, // 5 = Consumidor Final | 1 = Responsable Inscripto | 4 = Sujeto Exento
+                            "CbteDesde" => (int)$proximo,
+                            "CbteHasta" => (int)$proximo,
+                            "CbteFch" => $fechaFormateada,
+                            "FchServDesde" => $fechaFormateada,
+                            "FchServHasta" => $fechaFormateada,
+                            "FchVtoPago" => $fechaFormateada,
+                            "ImpTotal" => (float)$importeTotal,
+                            "ImpTotConc" => 0,
+                            "ImpNeto" => (float)$importeNeto,
+                            "ImpOpEx" => 0,
+                            "ImpIVA" => (float)$importeIVA,
+                            "ImpTrib" => 0,
+                            "MonId" => 'PES',
+                            "MonCotiz" => 1
+                        ]
+                    ]
+                ]
+            ];
+            
+            // Incluir objeto Iva solo si el importe de IVA es mayor a 0
+            if ($importeIVA > 0) {
+                $datos['FeCAEReq']['FeDetReq']['FECAEDetRequest']['Iva'] = [
+                    "AlicIva" => [
+                        "Id" => 5,
+                        "BaseImp" => (float)$importeNeto,
+                        "Importe" => (float)$importeIVA
+                    ]
+                ];
+            }
+
+            self::logInfo("Factura armada - Comprobante: $proximo, Importe: $importe");
+        } else {
+            if (!$nroCpbteCae) {
+                throw new \Exception("Número de comprobante asociado requerido para nota de crédito");
+            }    
+
+            $datos = [
+                'Auth' => [
+                'Token' => $token,
+                'Sign' => $sign,
+                'Cuit' => $cuit
+            ],
+                'FeCAEReq' => [
+                    'FeCabReq' => [
+                        'CantReg' => 1,
+                            'PtoVta' => (int)$punto,
+                            'CbteTipo' => (int)$tipoCpbte
+                    ],
+                    'FeDetReq' => [
+                        'FECAEDetRequest' => [
+                            "Concepto" => 2,
+                            "DocTipo" => 96,
+                            "DocNro" => (int)$nroDoc,
+                            "CondicionIVAReceptorId" => 5,
+                            "CbteDesde" => (int)$proximo,
+                            "CbteHasta" => (int)$proximo,
+                            "CbteFch" => $fechaFormateada,
+                            "FchServDesde" => $fechaFormateada,
+                            "FchServHasta" => $fechaFormateada,
+                            "FchVtoPago" => $fechaFormateada,
+                            "ImpTotal" => (float)$importe,
+                            "ImpTotConc" => 0,
+                            "ImpNeto" => (float)$importe,
+                            "ImpOpEx" => 0,
+                            "ImpIVA" => 0,
+                            "ImpTrib" => 0,
+                            "MonId" => 'PES',
+                            "MonCotiz" => 1,
+                            "CbtesAsoc" => [
+                                "CbteAsoc" => [
+                                    "Tipo" => 11,
+                                        "PtoVta" => (int)$punto,
+                                        "Nro" => (int)$nroCpbteCae
+                                ],
+                            ],
+                        ]
+                    ]
+                ]
+            ];
+            self::logInfo("Nota de crédito armada - Comprobante: $proximo, Asociado: $nroCpbteCae");
+        } 
+
+            // 8. Enviar factura con lógica de reintentos (incluye errores de respuesta AFIP)
+            $maxReintentos = 1;
+            $response = null;
+            $ultimoError = null;
+            $esErrorTemporal = false;
+            
+            for ($intento = 1; $intento <= $maxReintentos; $intento++) {
+                try {
+                    self::logInfo("Enviando solicitud CAE - Intento $intento/$maxReintentos");
+                    $response = $client->FECAESolicitar($datos);
+                    
+                    // 9. Verificar errores en la respuesta de AFIP
+                    $resultado = $response->FECAESolicitarResult;
+                    
+                    if (isset($resultado->Errors) && $resultado->Errors) {
+                        $errores = is_array($resultado->Errors->Err) ? $resultado->Errors->Err : [$resultado->Errors->Err];
+                        $mensajesError = [];
+                        $codigosError = [];
+                        
+                        foreach ($errores as $error) {
+                            $mensajesError[] = "Código {$error->Code}: {$error->Msg}";
+                            $codigosError[] = $error->Code;
+                        }
+                        
+                        // Verificar si es error temporal (500, EsPtoVtaMono)
+                        $esErrorTemporal = false;
+                        foreach ($codigosError as $codigo) {
+                            if ($codigo == 500 || strpos($error->Msg ?? '', 'EsPtoVtaMono') !== false) {
+                                $esErrorTemporal = true;
+                                break;
+                            }
+                        }
+                        
+                        $mensajeCompleto = "Errores AFIP: " . implode(", ", $mensajesError);
+                        $ultimoError = new \Exception($mensajeCompleto);
+                        
+                        self::logError("Error AFIP en intento $intento: $mensajeCompleto");
+                        
+                        if ($esErrorTemporal && $intento < $maxReintentos) {
+                            $segundos = $intento * 5; // 5, 10, 15 segundos
+                            self::logInfo("Error temporal de AFIP (código 500/EsPtoVtaMono), esperando $segundos segundos antes del siguiente intento");
+                            sleep($segundos);
+                            continue; // Reintentar
+                        } else {
+                            // Error no temporal o se agotaron los reintentos
+                            if ($esErrorTemporal) {
+                                // Personalizar mensaje para errores temporales que persisten
+                                $mensajePersonalizado = "🚫 Error de servidores AFIP después de $intento intentos\n\n";
+                                $mensajePersonalizado .= "El servicio de AFIP está experimentando problemas técnicos (código 500 - EsPtoVtaMono).\n\n";
+                                $mensajePersonalizado .= "📋 Recomendaciones:\n";
+                                $mensajePersonalizado .= "• Espere 15-20 minutos y vuelva a intentar\n";
+                                $mensajePersonalizado .= "• Verifique el estado de servicios de AFIP en su sitio web oficial\n";
+                                $mensajePersonalizado .= "• Este error es temporal y se resolverá cuando AFIP corrija sus servidores\n";
+                                $mensajePersonalizado .= "• La factura NO se generó, puede reintentarla más tarde sin problemas";
+                                
+                                throw new \Exception($mensajePersonalizado);
+                            } else {
+                                throw $ultimoError;
+                            }
+                        }
+                    }
+                    
+                    // Si llegamos aquí, no hay errores en la respuesta
+                    break;
+                    
+                } catch (\SoapFault $e) {
+                    $ultimoError = $e;
+                    self::logError("Error SOAP en intento $intento: " . $e->getMessage());
+                    
+                    // Si es error SOAP 500, esperamos antes de reintentar
+                    if (strpos($e->getMessage(), '500') !== false || strpos($e->getMessage(), 'EsPtoVtaMono') !== false) {
+                        if ($intento < $maxReintentos) {
+                            $segundos = $intento * 5; // 5, 10, 15 segundos
+                            self::logInfo("Error temporal SOAP de AFIP, esperando $segundos segundos antes del siguiente intento");
+                            sleep($segundos);
+                        }
+                    } else {
+                        // Error SOAP no temporal, no reintentamos
+                        break;
+                    }
+                }
+            }
+            
+            if (!$response) {
+                if ($esErrorTemporal) {
+                    $mensajeFinal = "🚫 Servicio AFIP no disponible después de $maxReintentos intentos\n\n";
+                    $mensajeFinal .= "Los servidores de AFIP están experimentando problemas técnicos.\n\n";
+                    $mensajeFinal .= "📋 Recomendaciones:\n";
+                    $mensajeFinal .= "• Espere 15-20 minutos y vuelva a intentar\n";
+                    $mensajeFinal .= "• Verifique el estado de servicios de AFIP\n";
+                    $mensajeFinal .= "• La factura NO se generó, puede reintentarla más tarde sin problemas";
+                } else {
+                    $mensajeFinal = "Error después de $maxReintentos intentos";
+                    if ($ultimoError) {
+                        $mensajeFinal .= ": " . $ultimoError->getMessage();
+                    }
+                }
+                throw new \Exception($mensajeFinal);
+            }
+
+            // 10. Procesar respuesta exitosa
+            self::logInfo("=== INICIANDO PROCESAMIENTO DE RESPUESTA ===");
+            
+            // Log completo de la respuesta para depuración
+            try {
+                if (isset($client)) {
+                    $responseXml = $client->__getLastResponse();
+                    self::logInfo("Response XML completo: " . $responseXml);
+                    self::logError("Response XML completo (ERROR LOG): " . $responseXml); // También en error log para asegurar visibilidad
+                } else {
+                    self::logError("Cliente SOAP no está disponible para obtener response XML");
+                }
+            } catch (\Exception $logEx) {
+                self::logError("Error al obtener response XML: " . $logEx->getMessage());
+            }
+            
+            // Log del objeto response directamente
+            self::logInfo("Tipo de response: " . gettype($response));
+            self::logInfo("Response completo (print_r): " . print_r($response, true));
+            self::logError("Response completo (ERROR LOG): " . print_r($response, true));
+            
+            // Verificar que la respuesta tenga la estructura esperada
+            if (!isset($response->FECAESolicitarResult)) {
+                $responseStr = print_r($response, true);
+                self::logError("Estructura de respuesta inesperada. Response completo: " . $responseStr);
+                $mensaje = "La respuesta de AFIP no tiene la estructura esperada. Response: " . substr($responseStr, 0, 500);
+                throw new \Exception($mensaje);
+            }
+            
+            $resultado = $response->FECAESolicitarResult;
+            
+            // Log estructura del resultado
+            $resultadoStr = print_r($resultado, true);
+            self::logInfo("Estructura de FECAESolicitarResult: " . $resultadoStr);
+            self::logError("Estructura de FECAESolicitarResult (ERROR LOG): " . $resultadoStr);
+            
+            // Verificar si hay errores en el resultado antes de procesar
+            if (isset($resultado->Errors) && $resultado->Errors) {
+                $errores = is_array($resultado->Errors->Err) ? $resultado->Errors->Err : [$resultado->Errors->Err];
+                $mensajesError = [];
+                foreach ($errores as $error) {
+                    $mensajesError[] = "Código {$error->Code}: {$error->Msg}";
+                }
+                $mensajeCompleto = "Errores en respuesta AFIP: " . implode(", ", $mensajesError);
+                self::logError($mensajeCompleto);
+                throw new \Exception($mensajeCompleto);
+            }
+            
+            // Verificar que exista FeDetResp
+            if (!isset($resultado->FeDetResp)) {
+                $resultadoStr = print_r($resultado, true);
+                self::logError("No se encontró FeDetResp en la respuesta. Resultado completo: " . $resultadoStr);
+                $mensaje = "La respuesta de AFIP no contiene FeDetResp. Estructura recibida: " . substr($resultadoStr, 0, 500);
+                throw new \Exception($mensaje);
+            }
+            
+            // Verificar que FeDetResp sea un array o un objeto
+            $feDetResp = is_array($resultado->FeDetResp) ? $resultado->FeDetResp[0] : $resultado->FeDetResp;
+            
+            $feDetRespStr = print_r($feDetResp, true);
+            self::logInfo("FeDetResp: " . $feDetRespStr);
+            self::logError("FeDetResp (ERROR LOG): " . $feDetRespStr);
+            
+            if (!isset($feDetResp->FECAEDetResponse)) {
+                self::logError("No se encontró FECAEDetResponse. FeDetResp completo: " . $feDetRespStr);
+                $mensaje = "La respuesta de AFIP no contiene FECAEDetResponse. FeDetResp: " . substr($feDetRespStr, 0, 500);
+                throw new \Exception($mensaje);
+            }
+            
+            // FECAEDetResponse puede ser un array o un objeto
+            $fecaedetResponse = $feDetResp->FECAEDetResponse;
+            
+            // Si es un array, tomar el primer elemento
+            if (is_array($fecaedetResponse)) {
+                self::logInfo("FECAEDetResponse es un array con " . count($fecaedetResponse) . " elemento(s)");
+                if (empty($fecaedetResponse)) {
+                    throw new \Exception("FECAEDetResponse es un array vacío");
+                }
+                $detResponse = $fecaedetResponse[0];
+            } else {
+                // Si es un objeto, usarlo directamente
+                self::logInfo("FECAEDetResponse es un objeto");
+                $detResponse = $fecaedetResponse;
+            }
+            
+            // Log estructura del detalle de respuesta
+            $detResponseStr = print_r($detResponse, true);
+            self::logInfo("Estructura de FECAEDetResponse (procesado): " . $detResponseStr);
+            self::logError("Estructura de FECAEDetResponse (ERROR LOG): " . $detResponseStr);
+            
+            $cae = $detResponse->CAE ?? null;
+            $fchVto = $detResponse->CAEFchVto ?? null;
+            $observaciones = $detResponse->Observaciones->Obs ?? null;
+            $resultadoOperacion = $detResponse->Resultado ?? null;
+
+            // Log información de la respuesta para depuración
+            self::logInfo("Resultado de operación: " . ($resultadoOperacion ?? 'NULL'));
+            self::logInfo("CAE recibido: " . ($cae ?? 'NULL'));
+            self::logInfo("Fecha vencimiento: " . ($fchVto ?? 'NULL'));
+            self::logError("RESUMEN - Resultado: " . ($resultadoOperacion ?? 'NULL') . ", CAE: " . ($cae ?? 'NULL'));
+            
+            if ($observaciones) {
+                $obsArray = is_array($observaciones) ? $observaciones : [$observaciones];
+                foreach ($obsArray as $obs) {
+                    self::logInfo("Observación AFIP - Código {$obs->Code}: {$obs->Msg}");
+                    self::logError("Observación AFIP - Código {$obs->Code}: {$obs->Msg}");
+                }
+            } else {
+                self::logInfo("No se encontraron observaciones en la respuesta");
+                self::logError("No se encontraron observaciones en la respuesta");
+            }
+
+            self::logInfo("=== EVALUANDO CONDICIÓN: cae=" . ($cae ? 'SI' : 'NO') . ", resultadoOperacion=" . ($resultadoOperacion ?? 'NULL') . " ===");
+            
+            if ($cae && $resultadoOperacion === 'A') {
+                // Validar que la fecha de vencimiento no sea null antes de formatear
+                if (empty($fchVto) || $fchVto === null) {
+                    self::logError("Error: La fecha de vencimiento (CAEFchVto) es NULL o vacía");
+                    throw new \Exception("Error al procesar la respuesta de AFIP: La fecha de vencimiento del CAE no fue recibida. CAE: $cae");
+                }
+                
+                self::logInfo("CAE obtenido exitosamente: $cae, Vencimiento: $fchVto");
+                
+                if ($factura == 1) {     
+                    $caeSalida = $cae;
+                    
+                    // Validar que la conversión de fecha sea válida
+                    $vtoSalida = date("Y-m-d", strtotime($fchVto));
+                    if ($vtoSalida === false || $vtoSalida === '1970-01-01') {
+                        self::logError("Error: La fecha de vencimiento no pudo ser convertida. Valor recibido: $fchVto");
+                        throw new \Exception("Error al procesar la fecha de vencimiento del CAE. Fecha recibida: $fchVto");
+                    }
+
+                    $codigo = self::generarCodigoBarra($cuit.substr('0'.$tipoCpbte, -2).substr('0000'.$punto, -4).$caeSalida.$fchVto);
+                    
+                    $db->createCommand("update movimiento set cae = :cae, fechavto = :fecha, nrocomprobantecae = :comp,
+                    puntoventa = :punto, codigobarra = :codigo where id = :idOp")
+                    ->bindValue(':idOp', $idOp)
+                    ->bindValue(':cae', $caeSalida)
+                    ->bindValue(':fecha', $vtoSalida)
+                    ->bindValue(':comp', $proximo)
+                    ->bindValue(':punto', $punto)
+                    ->bindValue(':codigo', $codigo)
+                    ->execute();
+
+                    $db->createCommand("call actualizarNumeroReciboCae(:idOp);")
+                    ->bindValue(':idOp', $idOp)
+                    ->execute();
+
+                    self::logInfo("Factura actualizada en BD - IdOp: $idOp, CAE: $caeSalida");
+                    return ['cae' => $caeSalida, 'vto' => $vtoSalida];
+                }
+
+                if ($factura == 0) {         
+                    $db->createCommand("update movimiento set NotaCredito = :comp where id = :idOp")
+                    ->bindValue(':idOp', $idOp)
+                    ->bindValue(':comp', $proximo)
+                    ->execute();
+
+                    self::logInfo("Nota de crédito actualizada en BD - IdOp: $idOp, Comprobante: $proximo");
+                    return 1;
+                }   
+            } else {
+                self::logError("=== ENTRANDO AL BLOQUE ELSE - FACTURA NO APROBADA ===");
+                
+                // Construir mensaje de error más detallado con toda la información disponible
+                $mensajeError = "Error al generar factura.\n\n";
+                
+                // Agregar información de la estructura completa
+                $mensajeError .= "INFORMACIÓN DE LA RESPUESTA:\n";
+                $mensajeError .= "Resultado: " . ($resultadoOperacion ?? 'NULL (no disponible)') . "\n";
+                $mensajeError .= "CAE: " . ($cae ?? 'NULL (no recibido)') . "\n";
+                $mensajeError .= "Fecha Vencimiento: " . ($fchVto ?? 'NULL') . "\n\n";
+                
+                if ($resultadoOperacion) {
+                    $estados = [
+                        'A' => 'Aprobado',
+                        'R' => 'Rechazado',
+                        'P' => 'Parcialmente aprobado',
+                        'O' => 'Observado'
+                    ];
+                    $estadoTexto = $estados[$resultadoOperacion] ?? $resultadoOperacion;
+                    $mensajeError .= "Estado de la operación: $estadoTexto ($resultadoOperacion)\n";
+                } else {
+                    $mensajeError .= "Estado de la operación: No disponible (NULL)\n";
+                    $mensajeError .= "Esto indica que AFIP no devolvió un resultado válido.\n";
+                }
+                
+                if (!$cae) {
+                    $mensajeError .= "CAE no recibido.\n";
+                }
+                
+                if ($observaciones) {
+                    $obsArray = is_array($observaciones) ? $observaciones : [$observaciones];
+                    $mensajes = [];
+                    foreach ($obsArray as $obs) {
+                        $mensajes[] = "Código {$obs->Code}: {$obs->Msg}";
+                    }
+                    $mensajeError .= "\nObservaciones de AFIP:\n" . implode("\n", $mensajes);
+                } else {
+                    $mensajeError .= "\nNo se recibieron observaciones adicionales de AFIP.\n";
+                }
+                
+                // Agregar estructura completa al mensaje de error
+                $mensajeError .= "\n\nESTRUCTURA COMPLETA DE LA RESPUESTA:\n";
+                $mensajeError .= "FECAEDetResponse: " . substr($detResponseStr ?? print_r($detResponse, true), 0, 1000);
+                
+                // Log del request y response para depuración
+                try {
+                    if (isset($client)) {
+                        $requestXml = $client->__getLastRequest();
+                        $responseXml = $client->__getLastResponse();
+                        self::logError("Request SOAP completo: " . $requestXml);
+                        self::logError("Response SOAP completo: " . $responseXml);
+                        $mensajeError .= "\n\nPara más detalles, revise los logs en: runtime/logs/afip_cae.log";
+                    }
+                } catch (\Exception $logEx) {
+                    self::logError("Error al obtener request/response: " . $logEx->getMessage());
+                }
+                
+                self::logError("Mensaje de error completo: " . $mensajeError);
+                
+                throw new \Exception($mensajeError);
+            }
+            
+        } catch (\Exception $e) {
+            self::logError("Error en getCaeDirecto: " . $e->getMessage());
+            
+            // Si es un error de AFIP temporal, retornar estructura amigable
+            if (strpos($e->getMessage(), '🚫 Error de servidores AFIP') !== false || 
+                strpos($e->getMessage(), 'código 500') !== false || 
+                strpos($e->getMessage(), 'EsPtoVtaMono') !== false) {
+                
+                return [
+                    'error' => true,
+                    'tipo' => 'afip_temporal',
+                    'mensaje' => $e->getMessage(),
+                    'mostrar_amigable' => true
+                ];
+            }
+            
+            // Para otros errores, lanzar excepción normal
+            throw $e;
+        }
+    }
+
+    public static function getTaDirecto($cuit, $crt, $key, $esProduccion = false) {
+        // Determinar la URL de WSAA según el ambiente
+        $wsaaUrl = $esProduccion 
+            ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms?wsdl'  // Producción
+            : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl'; // Homologación
+            
+        $wsaa = new AfipWsaaService($crt, $key, $cuit, 'wsfe', $wsaaUrl);
+        $ta = $wsaa->obtenerTA();
+
+        return $ta;
+    }
+
+    private static function getWsdlPath($service) {
+        $wsdlDir = __DIR__ . '/../wsdl/afip/';
+        $localFile = $wsdlDir . $service . '.wsdl';
+        
+        // Verificar si el directorio existe y es accesible
+        if (!is_dir($wsdlDir)) {
+            self::logError("El directorio WSDL no existe: $wsdlDir");
+        } else {
+            // Verificar permisos del directorio
+            if (!is_readable($wsdlDir)) {
+                self::logError("El directorio WSDL no es legible (permisos): $wsdlDir");
+            } else {
+                self::logInfo("Directorio WSDL accesible: $wsdlDir");
+            }
+        }
+        
+        // Si existe el archivo local, verificar que sea legible
+        if (file_exists($localFile)) {
+            if (is_readable($localFile)) {
+                // Intentar leer el archivo para verificar permisos completos
+                $content = @file_get_contents($localFile);
+                if ($content !== false && !empty($content)) {
+                    self::logInfo("WSDL local encontrado y legible: $localFile (tamaño: " . strlen($content) . " bytes)");
+                    return $localFile;
+                } else {
+                    self::logError("WSDL local existe pero no se puede leer o está vacío: $localFile");
+                    // Verificar permisos específicos
+                    $perms = substr(sprintf('%o', fileperms($localFile)), -4);
+                    self::logError("Permisos del archivo: $perms");
+                }
+            } else {
+                self::logError("WSDL local existe pero no es legible (permisos): $localFile");
+                $perms = substr(sprintf('%o', fileperms($localFile)), -4);
+                self::logError("Permisos del archivo: $perms");
+            }
+        } else {
+            self::logInfo("WSDL local no encontrado: $localFile");
+        }
+        
+        // Si no existe localmente o no es legible, usar la URL remota
+        $urls = [
+            'wsaa' => 'https://wsaa.afip.gov.ar/ws/services/LoginCms?wsdl',
+            'wsfev1' => 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL',
+            'wsfev1-homo' => 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL'
+        ];
+        
+        $remoteUrl = $urls[$service] ?? $urls['wsfev1'];
+        self::logInfo("Usando URL remota como fallback: $remoteUrl");
+        
+        return $remoteUrl;
+    }
+
+    private static function logInfo($message) {
+        $logFile = __DIR__ . '/../runtime/logs/afip_cae.log';
+        $logDir = dirname($logFile);
+        
+        // Crear directorio si no existe
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
+        // Asegurar zona horaria de Buenos Aires para logs
+        $oldTz = date_default_timezone_get();
+        date_default_timezone_set('America/Argentina/Buenos_Aires');
+        $timestamp = date('Y-m-d H:i:s T');
+        date_default_timezone_set($oldTz);
+        
+        $logMessage = "[INFO] $timestamp - $message" . PHP_EOL;
+        
+        // Escribir al archivo específico de AFIP
+        file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+        
+        // También al log del sistema para backup
+        error_log("[AFIP CAE INFO] $timestamp - $message");
+    }
+
+    private static function logError($message) {
+        $logFile = __DIR__ . '/../runtime/logs/afip_cae.log';
+        $logDir = dirname($logFile);
+        
+        // Crear directorio si no existe
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
+        // Asegurar zona horaria de Buenos Aires para logs
+        $oldTz = date_default_timezone_get();
+        date_default_timezone_set('America/Argentina/Buenos_Aires');
+        $timestamp = date('Y-m-d H:i:s T');
+        date_default_timezone_set($oldTz);
+        
+        $logMessage = "[ERROR] $timestamp - $message" . PHP_EOL;
+        
+        // Escribir al archivo específico de AFIP
+        file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+        
+        // También al log del sistema para backup
+        error_log("[AFIP CAE ERROR] $timestamp - $message");
+    }
+
+    public static function generarCodigoBarra($cadena) {
+        $largo = strlen($cadena);
+        $sumaImpar = 0;
+        $sumaPar = 0;
+    
+        // Convertir la cadena en un array de números
+        $c = str_split($cadena);
+    
+        // Sumar posiciones pares e impares
+        for ($i = 0; $i < $largo; $i++) {
+            $num = (int) $c[$i]; // Convertir caracter a entero
+            if (($i + 1) % 2 == 0) { // Índice en base 1
+                $sumaPar += $num;
+            } else {
+                $sumaImpar += $num;
+            }
+        }
+    
+        // Calcular el dígito verificador
+        $total = ($sumaImpar * 3) + $sumaPar;
+        $digito = substr($total, -1); // Último dígito
+    
+        // Si el último dígito es 0, se mantiene; si no, se calcula 10 - digito
+        $digitoVerificador = ($digito == '0') ? 0 : 10 - (int) $digito;
+    
+        // Retornar el código con el dígito verificador agregado
+        return $cadena . $digitoVerificador;
     }
 }
