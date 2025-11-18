@@ -531,7 +531,7 @@ class CajaController extends \yii\web\Controller
         from movimiento m join persona p on p.id = m.id_persona
         join concepto c on c.id = m.id_concepto
         join user u on u.id = m.id_usuario
-        join factura_tipo ft on ft.id = m.id_factura
+        left join factura_tipo ft on ft.id = m.id_factura
         left join localidades l on l.idlocalidad = p.id_localidad
         where m.id = :id;")
         ->bindValue(':id', $id)
@@ -552,7 +552,7 @@ class CajaController extends \yii\web\Controller
         from movimiento m join persona p on p.id = m.id_persona
         join concepto c on c.id = m.id_concepto
         join user u on u.id = m.id_usuario
-        join factura_tipo ft on ft.id = m.id_factura
+        left join factura_tipo ft on ft.id = m.id_factura
         left join localidades l on l.idlocalidad = p.id_localidad
         where m.id = :id;")
         ->bindValue(':id', $id)
