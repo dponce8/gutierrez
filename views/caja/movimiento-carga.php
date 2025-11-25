@@ -265,8 +265,6 @@
         var goOn =1;
         var mensaje = ""; 
 
-        console.log("Persona seleccionada:", persona);
-
         if ($('#s_caja').val() == 0) {
             goOn = 0; mensaje = "Seleccione Caja.<br>"; 
         }

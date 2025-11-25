@@ -12,6 +12,8 @@ use app\commands\AfipWsaaService;
 
 class CajaController extends \yii\web\Controller
 {
+
+    Const CAE_DIRECTO = 0;
     public $enableCsrfValidation = false;
 
     public function beforeAction($action)
@@ -89,8 +91,10 @@ class CajaController extends \yii\web\Controller
             ->bindValue(':id', $idMov)
             ->queryOne();
 
-            if (($datosAnulacion['cae'] != null or $datosAnulacion['cae'] != '') and $datosAnulacion['nota_afip'] > 0) {
-                $resultadoCae = self::getCaeDirecto($idMov, $datosAnulacion['nota_afip']);
+            if (self::CAE_DIRECTO == 1) {
+                if (($datosAnulacion['cae'] != null or $datosAnulacion['cae'] != '') and $datosAnulacion['nota_afip'] > 0) {
+                    $resultadoCae = self::getCaeDirecto($idMov, $datosAnulacion['nota_afip']);
+                }
             }
 
             $db->createCommand("update movimiento set estado = 0 where id = :idMov")
@@ -525,26 +529,28 @@ class CajaController extends \yii\web\Controller
     {
         $db = Yii::$app->db;
 
-        /*$datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
-        c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
-        l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
-        from movimiento m join persona p on p.id = m.id_persona
-        join concepto c on c.id = m.id_concepto
-        join user u on u.id = m.id_usuario
-        left join factura_tipo ft on ft.id = m.id_factura
-        left join localidades l on l.idlocalidad = p.id_localidad
-        where m.id = :id;")
-        ->bindValue(':id', $id)
-        ->queryOne();
+        if (self::CAE_DIRECTO == 1) {
+            $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
+            c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
+            l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
+            from movimiento m join persona p on p.id = m.id_persona
+            join concepto c on c.id = m.id_concepto
+            join user u on u.id = m.id_usuario
+            left join factura_tipo ft on ft.id = m.id_factura
+            left join localidades l on l.idlocalidad = p.id_localidad
+            where m.id = :id;")
+            ->bindValue(':id', $id)
+            ->queryOne();
 
-        if ($datos['cae'] == '' or $datos['cae'] == null) {
-            $resultadoCae = self::getCaeDirecto($id, $datos['tipo_afip']);
-            
-            // Si hay error temporal de AFIP, mostrar mensaje amigable
-            if (is_array($resultadoCae) && isset($resultadoCae['error']) && $resultadoCae['mostrar_amigable']) {
-                Yii::$app->session->setFlash('warning', $resultadoCae['mensaje']);
+            if ($datos['cae'] == '' or $datos['cae'] == null) {
+                $resultadoCae = self::getCaeDirecto($id, $datos['tipo_afip']);
+                
+                // Si hay error temporal de AFIP, mostrar mensaje amigable
+                if (is_array($resultadoCae) && isset($resultadoCae['error']) && $resultadoCae['mostrar_amigable']) {
+                    Yii::$app->session->setFlash('warning', $resultadoCae['mensaje']);
+                }
             }
-        }*/
+        }
 
         $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
         c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
@@ -1458,10 +1464,11 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             $punto = $info['puntoventaafip'] ?? null;
             $importe = $info['total'] ?? null;
             $fecha = $info['fecha'] ?? null;
-            $nroCpbteCae = $info['NroComprobanteCae'] ?? null;
+            $nroCpbteCae = $info['nrocomprobantecae'] ?? null;
             $crt_file = $info['crtfile'] ?? null;
             $key_file = $info['keyfile'] ?? null;
             $nroDoc = $info['nrodoc'] ?? null;
+            $compAsoc = $info['compAsoc'] ?? null;
 
             // Validar datos críticos
             if (!$cuit || !$punto || !$importe || !$fecha || !$nroDoc) {
@@ -1541,7 +1548,7 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             $fechaFormateada = date("Ymd", strtotime($fecha));
             self::logInfo("Datos extraídos - CUIT: $cuit, Punto: $punto, Importe: $importe, Fecha: $fechaFormateada");
 
-            // 4. Obtener token y signature
+        // 4. Obtener token y signature
         $salida = self::getTaDirecto($cuit, $crt, $key, $esProduccion);
 
         if (!isset($salida['token']) || !isset($salida['sign'])) {
@@ -1738,7 +1745,7 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
                     'FeDetReq' => [
                         'FECAEDetRequest' => [
                             "Concepto" => 2,
-                            "DocTipo" => 80, // 96 = CUIT | 80 = DNI
+                            "DocTipo" => 80, // 80 = CUIT | 96 = DNI
                             "DocNro" => (int)$nroDoc,
                             "CondicionIVAReceptorId" => $tipoCpbte == 1 ? 1 : 5, // 5 = Consumidor Final | 1 = Responsable Inscripto | 4 = Sujeto Exento
                             "CbteDesde" => (int)$proximo,
@@ -1777,6 +1784,18 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
                 throw new \Exception("Número de comprobante asociado requerido para nota de crédito");
             }    
 
+            $importe = $info['importeRecibo'];
+
+            $importeTotal = (float)$importe;
+            $importeNeto = (float)$importe;
+            $importeIVA = 0;
+
+            if ((int)$tipoCpbte == 3 or (int)$tipoCpbte == 8) {
+                $importeTotal = number_format((float)$importe, 2, '.', '');
+                $importeNeto = number_format((float)$importe /1.21, 2, '.', '');
+                $importeIVA = number_format((float)($importe - $importeNeto), 2, '.', '');
+            }
+
             $datos = [
                 'Auth' => [
                 'Token' => $token,
@@ -1792,26 +1811,26 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
                     'FeDetReq' => [
                         'FECAEDetRequest' => [
                             "Concepto" => 2,
-                            "DocTipo" => 96,
+                            "DocTipo" => 80, // 80 = CUIT | 96 = DNI
                             "DocNro" => (int)$nroDoc,
-                            "CondicionIVAReceptorId" => 5,
+                            "CondicionIVAReceptorId" => $tipoCpbte == 3 ? 1 : 5, // 5 = Consumidor Final | 1 = Responsable Inscripto | 4 = Sujeto Exento
                             "CbteDesde" => (int)$proximo,
                             "CbteHasta" => (int)$proximo,
                             "CbteFch" => $fechaFormateada,
                             "FchServDesde" => $fechaFormateada,
                             "FchServHasta" => $fechaFormateada,
                             "FchVtoPago" => $fechaFormateada,
-                            "ImpTotal" => (float)$importe,
+                            "ImpTotal" => (float)$importeTotal,
                             "ImpTotConc" => 0,
-                            "ImpNeto" => (float)$importe,
+                            "ImpNeto" => (float)$importeNeto,
                             "ImpOpEx" => 0,
-                            "ImpIVA" => 0,
+                            "ImpIVA" => (float)$importeIVA,
                             "ImpTrib" => 0,
                             "MonId" => 'PES',
                             "MonCotiz" => 1,
                             "CbtesAsoc" => [
                                 "CbteAsoc" => [
-                                    "Tipo" => 11,
+                                    "Tipo" => $compAsoc,
                                         "PtoVta" => (int)$punto,
                                         "Nro" => (int)$nroCpbteCae
                                 ],
@@ -1820,6 +1839,17 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
                     ]
                 ]
             ];
+
+            // Incluir objeto Iva solo si el importe de IVA es mayor a 0
+            if ($importeIVA > 0) {
+                $datos['FeCAEReq']['FeDetReq']['FECAEDetRequest']['Iva'] = [
+                    "AlicIva" => [
+                        "Id" => 5,
+                        "BaseImp" => (float)$importeNeto,
+                        "Importe" => (float)$importeIVA
+                    ]
+                ];
+            }
             self::logInfo("Nota de crédito armada - Comprobante: $proximo, Asociado: $nroCpbteCae");
         } 
 

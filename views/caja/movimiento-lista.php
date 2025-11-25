@@ -13,6 +13,7 @@
             <th style="font-size: 10px; font-weight: bold">Importe</th>
             <th style="font-size: 10px; font-weight: bold">Tipo Factura</th>
             <th style="font-size: 10px; font-weight: bold">Nro. Factura</th>
+            <th style="font-size: 10px; font-weight: bold">Nota Crédito</th>
             <th style="font-size: 10px; font-weight: bold">Persona</th>
             <th style="font-size: 10px; font-weight: bold">Usuario</th>
         </tr>
@@ -37,6 +38,7 @@
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)" style="text-align: right;"><?= number_format(floatval($m['importe']), 2, ',', '.')?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['tipo_factura']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['nro_factura']?></td>
+                <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['notacredito']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['persona']?></td>
                 <td onClick="verMedios(<?=$m['idMov'].','.$c?>)"><?= $m['usuario']?></td>
             </tr>
