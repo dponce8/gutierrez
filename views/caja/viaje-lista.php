@@ -2,7 +2,11 @@
 // Validar CUIT: debe tener exactamente 13 dígitos y solo contener números
 $cuitValido = false;
 if (isset($cuit) && $cuit !== null && $cuit !== '') {
-    // Verificar que tenga exactamente 13 caracteres y que todos sean dígitos
+    // Verificar que tenga exactamente 11 caracteres y que todos sean dígitos
+    // Limpiar la variable $cuit quitando puntos, guiones y espacios en blanco antes de validarla
+    if (isset($cuit) && $cuit !== null && $cuit !== '') {
+        $cuit = preg_replace('/[^\d]/', '', $cuit);
+    }
     if (strlen($cuit) == 11 && ctype_digit($cuit)) {
         $cuitValido = true;
     }
