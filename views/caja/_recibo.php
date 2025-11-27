@@ -189,13 +189,13 @@ if ($tipoConcepto == 2) {    // Orden de pago
         </tr>
         <tr>
             <td align="left" width="80" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
-            <td align="center" width="30" colspan="3" style="font-size: 17px; border-bottom-style: solid; border-top-style: solid;  border-right-style: solid;"> X</td>
-            <td align="left" width="240" colspan="3" style="font-size: 10px; border-right-style: solid;"></td>
+            <td align="center" width="30" colspan="3" style="font-size: 17px; font-weight: bolder; border-bottom-style: solid; border-top-style: solid;  border-right-style: solid;"> '.$datos['tipo_factura'].'</td>
+            <td align="right" width="240" colspan="3" style="font-size: 10px; border-right-style: solid;">Fecha Emisión: <b>'.date("d/m/Y", strtotime($datos['fecha'])).'</b></td>
         </tr>
         <tr>
             <td align="left" colspan="2" width="78"  style="font-size: 10px;; "></td>
-            <td align="center" colspan="2" width="40"  style="font-size: 5px;; ">Documento no válido como factura</td>
-            <td align="right" width="232" style="font-size: 10px; border-right-style: solid; "><b>RECIBO INTERNO N° '.$datos['nro_comprobante'].'</b></td>
+            <td align="center" colspan="2" width="40"  style="font-size: 5px;; "></td>
+            <td align="right" width="232" style="font-size: 10px; border-right-style: solid; ">Punto Venta: <b>'.substr('0000'.$datos['punto_venta'], -4).'</b> Comp. N°: <b>'.substr('00000000'.$datos['nro_comprobante'], -8).'</b></td>
         </tr>     
         <tr>
             <td align="left" width="60" style="font-size: 9px; border-left-style: solid; solid; border-top-style: solid;">
@@ -294,47 +294,50 @@ if ($tipoConcepto == 2) {    // Orden de pago
         </tr>  
         <tr>
             <td width="400" align="right" style="font-size: 9px; border-left-style: solid; border-top-style: solid;">
-                Total: 
+                Neto Imponible: $
             </td>
-            <td width="140" style="font-size: 12px; border-right-style: solid; border-top-style: solid;">
+            <td width="140" align="right" style="font-size: 12px; border-right-style: solid; border-top-style: solid;">
+                <b>'.number_format($datos['importe_neto'], 2, ",", ".").'</b>
+            </td>
+        </tr> 
+        <tr>
+            <td width="400" align="right" style="font-size: 9px; border-left-style: solid;">
+                IVA 21%: $
+            </td>
+            <td width="140" align="right" style="font-size: 12px; border-right-style: solid; ">
+                <b>'.number_format($datos['importe_iva'], 2, ",", ".").'</b>
+            </td>
+        </tr> 
+        <tr>
+            <td width="400" align="right" style="font-size: 9px; border-left-style: solid;">
+                Importe Total: $
+            </td>
+            <td width="140" align="right" style="font-size: 12px; border-right-style: solid; ">
                 <b>'.number_format($datos['importe'], 2, ",", ".").'</b>
             </td>
         </tr> 
         <tr>
-            <td width="180" height="60" align="left" style="font-size: 9px; border-left-style: solid; border-top-style: solid;">
+            <td width="180" height="60" align="left" style="font-size: 9px; border-top-style: solid;">
                 
             </td>
-            <td width="180" height="60" align="left" style="font-size: 9px; border-left-style: solid; border-top-style: solid;">
+            <td width="180" height="60" align="left" style="font-size: 9px; border-top-style: solid;">
                 
             </td>
-            <td width="180" height="60" align="left" style="font-size: 9px; border-right-style: solid; border-left-style: solid; border-top-style: solid;">
+            <td width="180" height="60" align="left" style="font-size: 9px; border-top-style: solid;">
                 
             </td>
-        </tr>          
-        <tr>
-            <td width="180" align="center" style="font-size: 8px; border-left-style: solid; border-bottom-style: solid;">
-                
-            </td>
-            <td width="180" align="center" style="font-size: 8px; border-left-style: solid; border-bottom-style: solid;">
-                ___________________________<br>Firma
-            </td>
-            <td width="180" align="center" style="font-size: 8px; border-right-style: solid; border-left-style: solid; border-bottom-style: solid;">
-                ___________________________<br>N°: Aclaración
-            </td>
-        </tr>  
-        <tr>
-            <td width="540" style="font-size: 8px;">
-                Usuario: '.$datos['usuario'].'
-            </td>
-        </tr>         
-        <tr>
-            <td width="540" align="center" style="font-size:15px"></td>
         </tr>';
         // Mostrar CAE y fecha de vencimiento solo si el CAE existe y no está vacío
         if ($datos['cae'] != null && $datos['cae'] != '') {
             $tbl .= '
             <tr>
-                <td width="540" align="center" style="font-size:9px">CAE: ' . $datos['cae'] . ' Fecha Vto: ' . date("d/m/Y", strtotime($datos['fechavto'])) . '</td>
+                <td rowspan="2" width="140" align="left" style="font-size:9px">
+                '. Html::img('@web/images/logo_arca.png', ['width' => '89px']) .'
+                </td>
+                <td width="400" align="right" style="font-size:9px">CAE: <b>' . $datos['cae'] . '</b></td>
+            </tr>
+            <tr>
+                <td width="400" align="right" style="font-size:9px"> Fecha Vto: <b>' . date("d/m/Y", strtotime($datos['fechavto'])) . '</b></td>
             </tr>';
         }
         $tbl .= '  

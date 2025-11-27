@@ -13,7 +13,7 @@ use app\commands\AfipWsaaService;
 class CajaController extends \yii\web\Controller
 {
 
-    Const CAE_DIRECTO = 0;
+    Const CAE_DIRECTO = 1;
     public $enableCsrfValidation = false;
 
     public function beforeAction($action)
@@ -532,7 +532,16 @@ class CajaController extends \yii\web\Controller
         if (self::CAE_DIRECTO == 1) {
             $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
             c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
-            l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
+            l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip,
+            case when ft.id = 1 then 
+                'A' 
+            else 
+                case when ft.id = 2 then 
+                    'B' 
+                else 
+                    'X' 
+                end 
+            end as tipo_factura
             from movimiento m join persona p on p.id = m.id_persona
             join concepto c on c.id = m.id_concepto
             join user u on u.id = m.id_usuario
@@ -542,7 +551,7 @@ class CajaController extends \yii\web\Controller
             ->bindValue(':id', $id)
             ->queryOne();
 
-            if ($datos['cae'] == '' or $datos['cae'] == null) {
+            if (($datos['cae'] == '' or $datos['cae'] == null) && $datos['tipo_afip'] != 0) {
                 $resultadoCae = self::getCaeDirecto($id, $datos['tipo_afip']);
                 
                 // Si hay error temporal de AFIP, mostrar mensaje amigable
@@ -554,12 +563,33 @@ class CajaController extends \yii\web\Controller
 
         $datos = $db->createCommand("select m.*,c.concepto, concat(u.apellido,' ',u.nombre) usuario,
         c.id_tipo tipoConcepto, concat(p.apellido,' ',p.nombre) nombrePersona, p.domicilio,
-        l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip
+        l.localidad, p.cuit, ft.tipo_afip, ft.nota_afip, 
+        case when e.puntoventaafip is not null and m.id_factura in (1,2) then e.puntoventaafip else 0 end punto_venta,
+        case when ft.id = 1 then 
+            'A' 
+        else 
+            case when ft.id = 2 then 
+                'B' 
+            else 
+                'X' 
+            end 
+        end as tipo_factura,
+        case when m.id_factura in (1,2) then 
+            m.importe / 1.21
+        else 
+            m.importe
+        end as importe_neto,
+        case when m.id_factura in (1,2) then 
+            m.importe - m.importe / 1.21
+        else 
+            0
+        end as importe_iva
         from movimiento m join persona p on p.id = m.id_persona
         join concepto c on c.id = m.id_concepto
         join user u on u.id = m.id_usuario
         left join factura_tipo ft on ft.id = m.id_factura
         left join localidades l on l.idlocalidad = p.id_localidad
+        left join sueldosempresas e on e.idempresa = m.id_empresa
         where m.id = :id;")
         ->bindValue(':id', $id)
         ->queryOne();
@@ -1433,7 +1463,12 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
         ->bindValue(':empresa', $empresa)
         ->queryAll();
 
-        return $this->renderPartial('viaje-lista', ['listado' => $listado]);
+        $infoPersona = $db->createCommand("select cuit from persona where id = :idPersona")
+        ->bindValue(':idPersona', $idPersona)
+        ->queryOne();
+        $cuit = $infoPersona['cuit'] ?? null;
+
+        return $this->renderPartial('viaje-lista', ['listado' => $listado, 'cuit' => $cuit]);
     }
 
     public static function getCaeDirecto($idOp, $tipoCpbte) {

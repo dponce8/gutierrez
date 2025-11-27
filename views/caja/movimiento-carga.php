@@ -283,7 +283,7 @@
         if ($('#s_factura').val() == 0) {
             goOn = 0; mensaje = mensaje + "Seleccione Tipo de Factura.<br>"; 
         }
-        if ($('#nro_factura').val() == '') {
+        if ($('#nro_factura').val() == '' && $('#s_factura').val() == 4) {
             goOn = 0; mensaje = mensaje + "Ingrese N° Factura.<br>"; 
         }
 
