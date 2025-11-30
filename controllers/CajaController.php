@@ -13,7 +13,7 @@ use app\commands\AfipWsaaService;
 class CajaController extends \yii\web\Controller
 {
 
-    Const CAE_DIRECTO = 0;
+    Const CAE_DIRECTO = 1;
     public $enableCsrfValidation = false;
 
     public function beforeAction($action)
