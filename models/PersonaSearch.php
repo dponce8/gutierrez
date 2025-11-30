@@ -50,6 +50,10 @@ class PersonaSearch extends Persona
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'sort' => [
+                'defaultOrder' => [
+                    'apellido' => SORT_ASC,
+                    'nombre' => SORT_ASC,
+                ],
                 'attributes' => [
                     'id',
                     'apellido',

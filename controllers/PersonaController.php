@@ -41,6 +41,14 @@ class PersonaController extends Controller
     {
         $searchModel = new PersonaSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        
+        // Aplicar orden por defecto si no se especifica orden en los parámetros
+        if (!isset($this->request->queryParams['sort'])) {
+            $dataProvider->sort->defaultOrder = [
+                'apellido' => SORT_ASC,
+                'nombre' => SORT_ASC,
+            ];
+        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,
