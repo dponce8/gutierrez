@@ -1613,16 +1613,20 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
         }
         
         // Crear contexto de stream con configuración más permisiva y robusta
+        // Configuración especial para OpenSSL 3.0+ que es más estricto con claves DH pequeñas
         $contextOptions = [
             'ssl' => [
                 'verify_peer' => false,
                 'verify_peer_name' => false,
                 'allow_self_signed' => true,
-                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT,
-                'ciphers' => 'ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH',
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+                // Cipher suite más permisivo para servidores con parámetros DH antiguos
+                'ciphers' => 'DEFAULT@SECLEVEL=1:ALL:!aNULL:!eNULL:!MD5:!3DES:!DES:!RC4:!IDEA:!SEED:!aDSS:!SRP:!PSK',
                 'disable_compression' => true,
                 'SNI_enabled' => true,
                 'peer_name' => $host ?? null,
+                // Opciones adicionales para compatibilidad con OpenSSL 3.0
+                'min_proto_version' => STREAM_CRYPTO_PROTO_TLSv1_2,
             ],
             'http' => [
                 'user_agent' => 'Mozilla/5.0 (compatible; PHP SOAP Client)',

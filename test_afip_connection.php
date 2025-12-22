@@ -77,6 +77,10 @@ $context = stream_context_create([
     'ssl' => [
         'verify_peer' => false,
         'verify_peer_name' => false,
+        'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+        // Cipher suite permisivo para OpenSSL 3.0+ (compatible con claves DH pequeñas)
+        'ciphers' => 'DEFAULT@SECLEVEL=1:ALL:!aNULL:!eNULL:!MD5:!3DES:!DES:!RC4:!IDEA:!SEED:!aDSS:!SRP:!PSK',
+        'min_proto_version' => STREAM_CRYPTO_PROTO_TLSv1_2,
     ]
 ]);
 $startTime = microtime(true);
@@ -107,6 +111,10 @@ if (function_exists('curl_init')) {
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_NOBODY => true,
         CURLOPT_HEADER => true,
+        // Configuración para OpenSSL 3.0+ (permite claves DH pequeñas)
+        CURLOPT_SSL_OPTIONS => CURLSSLOPT_ALLOW_BEAST | CURLSSLOPT_NO_REVOKE,
+        CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
+        CURLOPT_CIPHER_LIST => 'DEFAULT@SECLEVEL=1',
     ]);
     $startTime = microtime(true);
     $result = curl_exec($ch);
@@ -145,6 +153,10 @@ if (class_exists('SoapClient')) {
                 'ssl' => [
                     'verify_peer' => false,
                     'verify_peer_name' => false,
+                    'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+                    // Cipher suite permisivo para OpenSSL 3.0+ (compatible con claves DH pequeñas)
+                    'ciphers' => 'DEFAULT@SECLEVEL=1:ALL:!aNULL:!eNULL:!MD5:!3DES:!DES:!RC4:!IDEA:!SEED:!aDSS:!SRP:!PSK',
+                    'min_proto_version' => STREAM_CRYPTO_PROTO_TLSv1_2,
                 ]
             ])
         ]);

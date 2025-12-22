@@ -135,9 +135,29 @@ class AfipWsaaService
 
     private function enviarCMS(string $cms): string
     {
+        // Crear contexto SSL permisivo para OpenSSL 3.0+ (compatible con servidores AFIP que usan claves DH pequeñas)
+        $contextOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+                // Cipher suite más permisivo para servidores con parámetros DH antiguos
+                'ciphers' => 'DEFAULT@SECLEVEL=1:ALL:!aNULL:!eNULL:!MD5:!3DES:!DES:!RC4:!IDEA:!SEED:!aDSS:!SRP:!PSK',
+                'disable_compression' => true,
+                'SNI_enabled' => true,
+                'min_proto_version' => STREAM_CRYPTO_PROTO_TLSv1_2,
+            ],
+        ];
+        
+        $streamContext = stream_context_create($contextOptions);
+        
         $client = new SoapClient($this->wsaaUrl, [
             'trace' => true,
-            'exceptions' => true
+            'exceptions' => true,
+            'stream_context' => $streamContext,
+            'connection_timeout' => 60,
+            'cache_wsdl' => WSDL_CACHE_NONE,
         ]);
 
         $params = ['in0' => base64_encode($cms)];
