@@ -1742,6 +1742,12 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
         // Log de todos los diagnósticos
         self::logInfo("Resumen de diagnósticos: " . implode(" | ", $diagnosticos));
         
+        // Obtener la ruta real del directorio wsdl/afip para mensajes de error
+        $wsdlDirPath = realpath(__DIR__ . '/../wsdl/afip/');
+        if ($wsdlDirPath === false) {
+            $wsdlDirPath = __DIR__ . '/../wsdl/afip/';
+        }
+        
         try {
             $client = new \SoapClient($wsdlPath, [
                 'soap_version' => SOAP_1_2,
@@ -1774,11 +1780,17 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
                 
                 $diagnosticosTexto = isset($diagnosticos) ? "\n\nDiagnósticos realizados:\n" . implode("\n", $diagnosticos) : "";
                 
+                // Determinar si el WSDL es local o remoto
+                $wsdlEsLocal = !filter_var($wsdlPath, FILTER_VALIDATE_URL);
+                $wsdlInfo = $wsdlEsLocal 
+                    ? "3. Que el archivo WSDL local exista en: $wsdlDirPath\n"
+                    : "3. WSDL remoto usado (no requiere archivo local)\n";
+                
                 throw new \Exception("No se pudo conectar al servicio de AFIP. " .
                     "Verifique:\n" .
                     "1. Conectividad a internet (ping servicios1.afip.gov.ar)\n" .
                     "2. Firewall/proxy que permita conexiones HTTPS a *.afip.gov.ar (puerto 443)\n" .
-                    "3. Que el archivo WSDL local exista en: " . dirname($wsdlPath) . "\n" .
+                    $wsdlInfo .
                     "4. URL del servicio: $serviceLocation\n" .
                     "5. WSDL usado: $wsdlPath\n" .
                     "6. Versión de PHP y extensiones SSL/TLS instaladas (php -m | grep -i ssl)\n" .
@@ -1827,11 +1839,24 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             if (strpos($e->getMessage(), 'Could not connect') !== false || 
                 strpos($e->getMessage(), 'Connection refused') !== false ||
                 strpos($e->getMessage(), 'Connection timed out') !== false) {
+                
+                // Obtener la ruta real del directorio wsdl/afip
+                $wsdlDirPath = realpath(__DIR__ . '/../wsdl/afip/');
+                if ($wsdlDirPath === false) {
+                    $wsdlDirPath = __DIR__ . '/../wsdl/afip/';
+                }
+                
+                // Determinar si el WSDL es local o remoto
+                $wsdlEsLocal = !filter_var($wsdlPath, FILTER_VALIDATE_URL);
+                $wsdlInfo = $wsdlEsLocal 
+                    ? "3. Que el archivo WSDL local exista en: $wsdlDirPath\n"
+                    : "3. WSDL remoto usado (no requiere archivo local)\n";
+                
                 throw new \Exception("No se pudo conectar al servicio de AFIP. " .
                     "Verifique:\n" .
                     "1. Conectividad a internet\n" .
                     "2. Firewall/proxy que permita conexiones HTTPS a *.afip.gov.ar (puerto 443)\n" .
-                    "3. Que el archivo WSDL local exista en: " . dirname($wsdlPath) . "\n" .
+                    $wsdlInfo .
                     "4. URL del servicio: $serviceLocation\n" .
                     "5. WSDL usado: $wsdlPath\n" .
                     "Error original: " . $e->getMessage());
