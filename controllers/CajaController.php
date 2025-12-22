@@ -1612,7 +1612,7 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             self::logInfo("WSDL local no encontrado, usando remoto: $wsdlPath");
         }
         
-        // Crear contexto de stream con configuración más permisiva
+        // Crear contexto de stream con configuración más permisiva y robusta
         $contextOptions = [
             'ssl' => [
                 'verify_peer' => false,
@@ -1622,10 +1622,11 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
                 'ciphers' => 'ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH',
                 'disable_compression' => true,
                 'SNI_enabled' => true,
+                'peer_name' => $host ?? null,
             ],
             'http' => [
                 'user_agent' => 'Mozilla/5.0 (compatible; PHP SOAP Client)',
-                'timeout' => 60,
+                'timeout' => 120, // Aumentado a 120 segundos
                 'follow_location' => true,
                 'max_redirects' => 5,
                 'protocol_version' => '1.1',
@@ -1638,22 +1639,108 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             ]
         ];
         
+        // Agregar configuración de proxy si está definido
+        $httpProxy = getenv('HTTP_PROXY') ?: getenv('http_proxy');
+        $httpsProxy = getenv('HTTPS_PROXY') ?: getenv('https_proxy');
+        if ($httpsProxy || $httpProxy) {
+            $proxyUrl = $httpsProxy ?: $httpProxy;
+            self::logInfo("Usando proxy: $proxyUrl");
+            $contextOptions['http']['proxy'] = $proxyUrl;
+            $contextOptions['http']['request_fulluri'] = true;
+        }
+        
         $streamContext = stream_context_create($contextOptions);
         
-        // Verificar conectividad básica usando fsockopen o curl si está disponible
+        // Verificaciones de conectividad mejoradas
         self::logInfo("Verificando conectividad al servicio...");
         $host = parse_url($serviceLocation, PHP_URL_HOST);
         $port = parse_url($serviceLocation, PHP_URL_PORT) ?: 443;
         
+        $diagnosticos = [];
+        
+        // 1. Verificar resolución DNS
         if ($host) {
-            $connection = @fsockopen('ssl://' . $host, $port, $errno, $errstr, 5);
-            if ($connection) {
-                fclose($connection);
-                self::logInfo("Conectividad SSL verificada exitosamente a $host:$port");
+            self::logInfo("Verificando resolución DNS para: $host");
+            $ip = @gethostbyname($host);
+            if ($ip === $host) {
+                $diagnosticos[] = "ERROR: No se pudo resolver DNS para $host";
+                self::logError("No se pudo resolver DNS para $host");
             } else {
+                self::logInfo("DNS resuelto: $host -> $ip");
+                $diagnosticos[] = "DNS OK: $host -> $ip";
+            }
+            
+            // 2. Verificar conectividad TCP básica (sin SSL)
+            self::logInfo("Verificando conectividad TCP básica a $host:$port");
+            $tcpConnection = @fsockopen($host, $port, $errno, $errstr, 10);
+            if ($tcpConnection) {
+                fclose($tcpConnection);
+                self::logInfo("Conectividad TCP básica OK");
+                $diagnosticos[] = "TCP OK: Puerto $port accesible";
+            } else {
+                $diagnosticos[] = "ERROR TCP: No se pudo conectar a $host:$port - Error $errno: $errstr";
+                self::logError("No se pudo establecer conexión TCP a $host:$port - Error $errno: $errstr");
+            }
+            
+            // 3. Verificar conectividad SSL
+            self::logInfo("Verificando conectividad SSL a $host:$port");
+            $sslConnection = @fsockopen('ssl://' . $host, $port, $errno, $errstr, 10);
+            if ($sslConnection) {
+                fclose($sslConnection);
+                self::logInfo("Conectividad SSL verificada exitosamente a $host:$port");
+                $diagnosticos[] = "SSL OK: Conexión SSL establecida";
+            } else {
+                $diagnosticos[] = "ERROR SSL: No se pudo establecer conexión SSL - Error $errno: $errstr";
                 self::logError("No se pudo establecer conexión SSL a $host:$port - Error $errno: $errstr");
             }
+            
+            // 4. Verificar con curl si está disponible
+            if (function_exists('curl_init')) {
+                self::logInfo("Verificando con cURL...");
+                $ch = curl_init($serviceLocation);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 10,
+                    CURLOPT_CONNECTTIMEOUT => 10,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_NOBODY => true,
+                    CURLOPT_HEADER => true,
+                ]);
+                $curlResult = @curl_exec($ch);
+                $curlError = curl_error($ch);
+                $curlHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($curlResult !== false && $curlHttpCode > 0) {
+                    self::logInfo("cURL OK: HTTP Code $curlHttpCode");
+                    $diagnosticos[] = "cURL OK: HTTP $curlHttpCode";
+                } else {
+                    $diagnosticos[] = "ERROR cURL: $curlError";
+                    self::logError("cURL falló: $curlError");
+                }
+            } else {
+                self::logInfo("cURL no disponible para diagnóstico");
+            }
+            
+            // 5. Verificar variables de entorno de proxy
+            $proxyVars = ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'NO_PROXY', 'no_proxy'];
+            $proxyEncontrado = false;
+            foreach ($proxyVars as $var) {
+                $value = getenv($var);
+                if ($value) {
+                    self::logInfo("Variable de proxy encontrada: $var = $value");
+                    $diagnosticos[] = "Proxy configurado: $var";
+                    $proxyEncontrado = true;
+                }
+            }
+            if (!$proxyEncontrado) {
+                self::logInfo("No se encontraron variables de proxy configuradas");
+            }
         }
+        
+        // Log de todos los diagnósticos
+        self::logInfo("Resumen de diagnósticos: " . implode(" | ", $diagnosticos));
         
         try {
             $client = new \SoapClient($wsdlPath, [
@@ -1681,14 +1768,23 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             if (strpos($e->getMessage(), 'Could not connect') !== false || 
                 strpos($e->getMessage(), 'Connection refused') !== false ||
                 strpos($e->getMessage(), 'SSL') !== false ||
-                strpos($e->getMessage(), 'TLS') !== false) {
+                strpos($e->getMessage(), 'TLS') !== false ||
+                strpos($e->getMessage(), 'timeout') !== false ||
+                strpos($e->getMessage(), 'timed out') !== false) {
+                
+                $diagnosticosTexto = isset($diagnosticos) ? "\n\nDiagnósticos realizados:\n" . implode("\n", $diagnosticos) : "";
+                
                 throw new \Exception("No se pudo conectar al servicio de AFIP. " .
                     "Verifique:\n" .
-                    "1. Conectividad a internet\n" .
-                    "2. Firewall/proxy que permita conexiones a *.afip.gov.ar\n" .
+                    "1. Conectividad a internet (ping servicios1.afip.gov.ar)\n" .
+                    "2. Firewall/proxy que permita conexiones HTTPS a *.afip.gov.ar (puerto 443)\n" .
                     "3. Que el archivo WSDL local exista en: " . dirname($wsdlPath) . "\n" .
                     "4. URL del servicio: $serviceLocation\n" .
-                    "5. Versión de PHP y extensiones SSL/TLS instaladas\n" .
+                    "5. WSDL usado: $wsdlPath\n" .
+                    "6. Versión de PHP y extensiones SSL/TLS instaladas (php -m | grep -i ssl)\n" .
+                    "7. Resolución DNS (nslookup servicios1.afip.gov.ar)\n" .
+                    "8. Si hay proxy, configurar variables HTTP_PROXY/HTTPS_PROXY\n" .
+                    "$diagnosticosTexto\n" .
                     "Error original: " . $e->getMessage() . " (Código: " . $e->getCode() . ")");
             }
             throw $e;
