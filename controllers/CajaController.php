@@ -13,7 +13,7 @@ use app\commands\AfipWsaaService;
 class CajaController extends \yii\web\Controller
 {
 
-    Const CAE_DIRECTO = 0;
+    Const CAE_DIRECTO = 1;
     public $enableCsrfValidation = false;
 
     public function beforeAction($action)
@@ -1511,8 +1511,8 @@ join sueldosempresas ca on ca.idEmpresa = m.id_empresa        join user u on u.i
             }
 
             // 3. Configuración del servicio WSFE
-            $wsfeUrl = 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL'; // Homologación
-            //$wsfeUrl = 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL'; // Producción
+            //$wsfeUrl = 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL'; // Homologación
+            $wsfeUrl = 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL'; // Producción
 
             // Determinar el ambiente (producción vs testing)
             $esProduccion = strpos($wsfeUrl, 'servicios1.afip.gov.ar') !== false;
