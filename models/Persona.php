@@ -18,6 +18,7 @@ use Yii;
  * @property string|null $celular
  * @property string|null $email
  * @property int|null $id_tipo_persona
+ * @property string|null $obs
  */
 class Persona extends \yii\db\ActiveRecord
 {
@@ -41,6 +42,7 @@ class Persona extends \yii\db\ActiveRecord
             [['cuit'], 'string', 'max' => 13],
             [['domicilio'], 'string', 'max' => 245],
             [['fijo', 'celular', 'email'], 'string', 'max' => 45],
+            [['obs'], 'string'],
         ];
     }
 
@@ -61,6 +63,7 @@ class Persona extends \yii\db\ActiveRecord
             'celular' => 'Celular',
             'email' => 'Email',
             'id_tipo_persona' => 'Tipo Persona',
+            'obs' => 'Observaciones',
         ];
     }
 

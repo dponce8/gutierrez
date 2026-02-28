@@ -21,7 +21,7 @@ class PersonaSearch extends Persona
     {
         return [
             [['id', 'id_localidad', 'id_provincia', 'id_tipo_persona'], 'integer'],
-            [['apellido', 'nombre', 'cuit', 'domicilio', 'fijo', 'celular', 'email', 'provinciaNombre', 'tipoPersona'], 'safe'],
+            [['apellido', 'nombre', 'cuit', 'domicilio', 'fijo', 'celular', 'email', 'obs', 'provinciaNombre', 'tipoPersona'], 'safe'],
         ];
     }
 
@@ -66,6 +66,7 @@ class PersonaSearch extends Persona
                     'celular',
                     'email',
                     'id_tipo_persona',
+                    'obs',
                     'provinciaNombre' => [
                         'asc' => ['provincia.provincia' => SORT_ASC],
                         'desc' => ['provincia.provincia' => SORT_DESC],
@@ -101,6 +102,7 @@ class PersonaSearch extends Persona
             ->andFilterWhere(['like', 'persona.fijo', $this->fijo])
             ->andFilterWhere(['like', 'persona.celular', $this->celular])
             ->andFilterWhere(['like', 'persona.email', $this->email])
+            ->andFilterWhere(['like', 'persona.obs', $this->obs])
             ->andFilterWhere(['like', 'provincia.provincia', $this->provinciaNombre])
             ->andFilterWhere(['like', 'persona_tipo.tipo', $this->tipoPersona]);
 

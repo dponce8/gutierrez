@@ -25,6 +25,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'domicilio') ?>
 
+    <?= $form->field($model, 'obs') ?>
+
     <?php // echo $form->field($model, 'id_localidad') ?>
 
     <?php // echo $form->field($model, 'id_provincia') ?>

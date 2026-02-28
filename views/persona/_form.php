@@ -10,11 +10,15 @@ use yii\helpers\ArrayHelper;
 /** @var yii\web\View $this */
 /** @var app\models\Persona $model */
 /** @var yii\widgets\ActiveForm $form */
+/** @var int|string|null $popup Si está definido, el formulario se abrió en popup (ej. desde presupuesto) */
 ?>
 
 <div class="persona-form">
 
     <?php $form = ActiveForm::begin(); ?>
+    <?php if (!empty($popup)): ?>
+        <input type="hidden" name="popup" value="1">
+    <?php endif; ?>
 
     <div class="row">
         <div class="col-sm-4">    
@@ -37,12 +41,14 @@ use yii\helpers\ArrayHelper;
 
         <div class="col-sm-4">
             <?= $form->field($model, 'id_provincia')->dropDownList(ArrayHelper::map(Provincia::find()->orderBy('provincia ASC')->all(),'id','provincia'),
-            [
-                'prompt' => Yii::t('app','Seleccione Provincia'),
+            array_merge(
+                ['prompt' => Yii::t('app','Seleccione Provincia')],
+                empty($popup) ? [
                 'onchange'=>'
                 $.post( "index.php?r=persona/localidad&id='.'"+$(this).val()+"&idLocalidad="+'.(int)$model->id_localidad.', function( data ) {
                 $( "select#persona-id_localidad" ).html( data ); })'
-            ]
+                ] : []
+            )
             )->label('Provincia'); ?>
         </div>    
 
@@ -72,20 +78,32 @@ use yii\helpers\ArrayHelper;
         <?= $form->field($model, 'id_tipo_persona')->dropDownList(
                 ArrayHelper::map(PersonaTipo::find()->all(),'id','tipo'))  ?>
         </div>      
-    </div>      
+    </div>  
+
+    <div class="row">
+        <div class="col-sm-12">
+            <?= $form->field($model, 'obs')->textarea(['rows' => 3]) ?>
+        </div>
+    </div>
 
     <div class="form-group">
         <?= Html::submitButton('Guardar', ['class' => 'btn btn-success']) ?>
-        <?= Html::a('Volver', ['index', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
+        <?php if (!empty($popup)): ?>
+            <?= Html::button('Cerrar sin guardar', ['class' => 'btn btn-warning', 'onclick' => 'if(window.parent!==window.self&&typeof window.parent.cerrarModalNuevoCliente==="function")window.parent.cerrarModalNuevoCliente();else window.close();']) ?>
+        <?php else: ?>
+            <?= Html::a('Volver', ['index', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
+        <?php endif; ?>
     </div>
 
     <?php ActiveForm::end(); ?>
 
 </div>
 
+<?php if (empty($popup)): ?>
 <script>
     $(document).ready(function() {
         $.post( "index.php?r=persona/localidad&id="+<?=$model->id_provincia?>+"&idLocalidad="+<?=$model->id_localidad?>, function( data ) {
                 $( "select#persona-id_localidad").html( data ); })
     });
-</script>    
+</script>
+<?php endif; ?>    

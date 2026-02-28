@@ -8,11 +8,15 @@ use app\models\Provincia;
 /** @var yii\web\View $this */
 /** @var app\models\Localidades $model */
 /** @var yii\widgets\ActiveForm $form */
+/** @var int|string|null $popup Si está definido, el formulario se abrió en popup (ej. desde presupuesto) */
 ?>
 
 <div class="localidades-form">
 
     <?php $form = ActiveForm::begin(); ?>
+    <?php if (!empty($popup)): ?>
+        <input type="hidden" name="popup" value="1">
+    <?php endif; ?>
 
     <div class="row">
         <div class="col-md-6">
@@ -28,7 +32,11 @@ use app\models\Provincia;
 
     <div class="form-group">
         <?= Html::submitButton('Guardar', ['class' => 'btn btn-success']) ?>
-        <?= Html::a('Volver', ['index', 'IdLocalidad' => $model->IdLocalidad], ['class' => 'btn btn-warning']) ?>
+        <?php if (!empty($popup)): ?>
+            <?= Html::button('Cerrar sin guardar', ['class' => 'btn btn-warning', 'onclick' => 'if(window.parent!==window.self&&typeof window.parent.cerrarModalNuevoLocalidad==="function")window.parent.cerrarModalNuevoLocalidad();else window.close();']) ?>
+        <?php else: ?>
+            <?= Html::a('Volver', ['index', 'IdLocalidad' => $model->IdLocalidad], ['class' => 'btn btn-warning']) ?>
+        <?php endif; ?>
     </div>
 
     <?php ActiveForm::end(); ?>

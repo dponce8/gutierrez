@@ -43,7 +43,7 @@ class Localidades extends \yii\db\ActiveRecord
             'IdLocalidad' => 'Id',
             'Localidad' => 'Localidad',
             'id_provincia' => 'Provincia',
-            'codigo_postal' => 'Codigo Postal',
+            'codigo_postal' => 'C.P.',
         ];
     }
 }

@@ -77,18 +77,39 @@ class PersonaController extends Controller
     public function actionCreate()
     {
         $model = new Persona();
+        $popup = $this->request->get('popup');
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
+                if ($this->request->post('popup')) {
+                    return $this->redirect(['created-popup', 'id' => $model->id]);
+                }
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
         }
 
+        if ($this->request->get('popup')) {
+            return $this->renderPartial('create-form', [
+                'model' => $model,
+            ]);
+        }
+
         return $this->render('create', [
             'model' => $model,
+            'popup' => $popup,
         ]);
+    }
+
+    /**
+     * Vista mostrada al crear una persona desde popup (ej. desde presupuesto).
+     * Notifica a la ventana opener que refresque la lista de clientes y cierra esta ventana.
+     * @param int $id ID de la persona recién creada
+     */
+    public function actionCreatedPopup($id)
+    {
+        return $this->renderPartial('created-popup', ['id' => $id]);
     }
 
     /**

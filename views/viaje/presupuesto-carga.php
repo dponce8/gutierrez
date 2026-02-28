@@ -1,7 +1,7 @@
 <div class="row">
     <div class="form-group col-sm-4" style="margin-top: -10px;">
-        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Cliente</label>
-        <select class="form-control my-chosen-select" id="s_cliente" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Cliente <a href="#" onclick="abrirNuevoCliente(); return false;" title="Agregar nuevo cliente" style="text-decoration: none;"><i class="fa fa-plus" style="font-size: 10px;"></i></a></label>
+        <select class="form-control my-chosen-select" id="s_cliente" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Clientes ...</option>
             <?php foreach ($clientes as $p) {?>
                 <option value="<?=$p['id']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['id_cliente'] == $p['id']) ? 'selected' : ''?>><?=$p['apellido'].' '.$p['nombre']?></option>
@@ -31,8 +31,8 @@
         <input id="pasajeros" type="text" class="form-control" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['pasajeros'] : '')?>">
     </div>
     <div class="form-group col-sm-5" style="margin-top: -10px;">
-        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Origen</label>
-        <select class="form-control my-chosen-select" id="s_origen" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Origen <a href="#" onclick="abrirNuevoOrigen(); return false;" title="Agregar nueva localidad como origen" style="text-decoration: none;"><i class="fa fa-plus" style="font-size: 10px;"></i></a></label>
+        <select class="form-control my-chosen-select" id="s_origen" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Origen ...</option>
             <?php foreach ($localidades as $p) {?>
                 <option value="<?=$p['idlocalidad']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['origen'] == $p['idlocalidad']) ? 'selected' : ''?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
@@ -40,8 +40,8 @@
         </select>
     </div>
     <div class="form-group col-sm-5" style="margin-top: -10px;">
-        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Destino</label>
-        <select class="form-control my-chosen-select" id="s_destino" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Destino <a href="#" onclick="abrirNuevoDestino(); return false;" title="Agregar nueva localidad como destino" style="text-decoration: none;"><i class="fa fa-plus" style="font-size: 10px;"></i></a></label>
+        <select class="form-control my-chosen-select" id="s_destino" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Destino ...</option>
             <?php foreach ($localidades as $p) {?>
                 <option value="<?=$p['idlocalidad']?>" <?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) && $infoPresupuesto['destino'] == $p['idlocalidad']) ? 'selected' : ''?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
@@ -93,10 +93,33 @@
 
 <input id="h_id_presupuesto" type="hidden" value="<?=(isset($infoPresupuesto) && !is_null($infoPresupuesto) ? $infoPresupuesto['id'] : 0)?>">
 
+<style>
+    /* Chosen copia el ancho del select al iniciar; si el layout no calculó bien las columnas, queda muy estrecho */
+    #s_cliente_chosen, #s_origen_chosen, #s_destino_chosen { width: 100% !important; min-width: 0; }
+</style>
+
 <script>
     $(document).ready(function() {
-        $(".my-chosen-select").chosen();
-    });      
+        $(".my-chosen-select").chosen({ width: '100%' });
+    });
+
+    function abrirNuevoCliente() {
+        var url = '<?= \yii\helpers\Url::to(['persona/create', 'popup' => 1]) ?>';
+        document.getElementById('iframeNuevoCliente').src = url;
+        $('#modalNuevoCliente').modal('show');
+    }
+
+    function abrirNuevoOrigen() {
+        window.tipoLocalidadModal = 'origen';
+        document.getElementById('iframeNuevoLocalidad').src = '<?= \yii\helpers\Url::to(['localidades/create', 'popup' => 1]) ?>';
+        $('#modalNuevoLocalidad').modal('show');
+    }
+
+    function abrirNuevoDestino() {
+        window.tipoLocalidadModal = 'destino';
+        document.getElementById('iframeNuevoLocalidad').src = '<?= \yii\helpers\Url::to(['localidades/create', 'popup' => 1]) ?>';
+        $('#modalNuevoLocalidad').modal('show');
+    }      
 
 
     function cargarPresupuesto() {

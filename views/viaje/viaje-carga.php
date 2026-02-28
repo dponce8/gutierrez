@@ -1,7 +1,7 @@
 <div class="row">
     <div class="form-group col-sm-4" style="margin-top: -10px;">
-        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Cliente</label>
-        <select class="form-control my-chosen-select" id="s_cliente" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Cliente <a href="#" onclick="abrirNuevoCliente(); return false;" title="Agregar nuevo cliente" style="text-decoration: none;"><i class="fa fa-plus" style="font-size: 10px;"></i></a></label>
+        <select class="form-control my-chosen-select" id="s_cliente" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Clientes ...</option>
             <?php foreach ($clientes as $p) {?>
                 <option value="<?=$p['id']?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['id_cliente'] == $p['id']) {echo 'selected';}?>><?=$p['apellido'].' '.$p['nombre']?></option>
@@ -31,8 +31,8 @@
         <input id="pasajeros" type="text" class="form-control" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['pasajeros']) {echo 'value="'.$presupuestos['pasajeros'].'"';}?>>
     </div>
     <div class="form-group col-sm-5" style="margin-top: -10px;">
-        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Origen</label>
-        <select class="form-control my-chosen-select" id="s_origen" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Origen <a href="#" onclick="abrirNuevoOrigen(); return false;" title="Agregar nueva localidad como origen" style="text-decoration: none;"><i class="fa fa-plus" style="font-size: 10px;"></i></a></label>
+        <select class="form-control my-chosen-select" id="s_origen" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Origen ...</option>
             <?php foreach ($localidades as $p) {?>
                 <option value="<?=$p['idlocalidad']?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['origen'] == $p['idlocalidad']) {echo 'selected';}?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
@@ -40,8 +40,8 @@
         </select>
     </div>
     <div class="form-group col-sm-5" style="margin-top: -10px;">
-        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Destino</label>
-        <select class="form-control my-chosen-select" id="s_destino" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <label style="margin-bottom: 3px; font-size: 11px;">Seleccione Destino <a href="#" onclick="abrirNuevoDestino(); return false;" title="Agregar nueva localidad como destino" style="text-decoration: none;"><i class="fa fa-plus" style="font-size: 10px;"></i></a></label>
+        <select class="form-control my-chosen-select" id="s_destino" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Destino ...</option>
             <?php foreach ($localidades as $p) {?>
                 <option value="<?=$p['idlocalidad']?>" <?php if (isset($presupuestos) && !empty($presupuestos) && $presupuestos['destino'] == $p['idlocalidad']) {echo 'selected';}?>><?='['.$p['pais'].'] '.$p['provincia'].' - '.$p['localidad']?></option>
@@ -80,7 +80,7 @@
     </div>
     <div class="form-group col-sm-2" style="margin-top: -10px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Coche</label>
-        <select class="form-control my-chosen-select" id="s_coche" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <select class="form-control my-chosen-select" id="s_coche" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Coche ...</option>
             <?php foreach ($coches as $p) {?>
                 <option value="<?=$p['id']?>"><?=$p['numero_interno'].' ['.$p['asientos'].']'?></option>
@@ -89,7 +89,7 @@
     </div>
     <div class="form-group col-sm-4" style="margin-top: -10px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Seleccione 1° Chofer</label>
-        <select class="form-control my-chosen-select" id="s_chofer_1" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <select class="form-control my-chosen-select" id="s_chofer_1" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Chofer ...</option>
             <?php foreach ($choferes as $p) {?>
                 <option value="<?=$p['idempleado']?>"><?=$p['chofer']?></option>
@@ -98,7 +98,7 @@
     </div>
     <div class="form-group col-sm-4" style="margin-top: -10px;">
         <label style="margin-bottom: 3px; font-size: 11px;">Seleccione 2° Chofer</label>
-        <select class="form-control my-chosen-select" id="s_chofer_2" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px;" >
+        <select class="form-control my-chosen-select" id="s_chofer_2" style="font-size: 12px; margin-top: 3px; padding-bottom: 0px; height: 26px; width: 100%;" >
             <option value="0">Chofer ...</option>
             <?php foreach ($choferes as $p) {?>
                 <option value="<?=$p['idempleado']?>"><?=$p['chofer']?></option>
@@ -131,11 +131,33 @@
     </div>
 </div> 
 
+<style>
+    /* Chosen: forzar ancho 100% en los contenedores para que se vea el contenido */
+    #s_cliente_chosen, #s_origen_chosen, #s_destino_chosen, #s_coche_chosen, #s_chofer_1_chosen, #s_chofer_2_chosen { width: 100% !important; min-width: 0; }
+</style>
+
 <script>
     $(document).ready(function() {
-        $(".my-chosen-select").chosen();
+        $(".my-chosen-select").chosen({ width: '100%' });
         $("#btnCargarViaje").show();
-    });      
+    });
+
+    function abrirNuevoCliente() {
+        document.getElementById('iframeNuevoCliente').src = '<?= \yii\helpers\Url::to(['persona/create', 'popup' => 1]) ?>';
+        $('#modalNuevoCliente').modal('show');
+    }
+
+    function abrirNuevoOrigen() {
+        window.tipoLocalidadModal = 'origen';
+        document.getElementById('iframeNuevoLocalidad').src = '<?= \yii\helpers\Url::to(['localidades/create', 'popup' => 1]) ?>';
+        $('#modalNuevoLocalidad').modal('show');
+    }
+
+    function abrirNuevoDestino() {
+        window.tipoLocalidadModal = 'destino';
+        document.getElementById('iframeNuevoLocalidad').src = '<?= \yii\helpers\Url::to(['localidades/create', 'popup' => 1]) ?>';
+        $('#modalNuevoLocalidad').modal('show');
+    }      
 
 
     function cargarViaje() {

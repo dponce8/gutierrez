@@ -58,6 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     return \app\models\PersonaTipo::findOne(['id' => $model->id_tipo_persona])->tipo;
                 },
             ],
+            'obs:ntext',
         ],
     ]) ?>
 

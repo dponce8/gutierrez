@@ -68,18 +68,36 @@ class LocalidadesController extends Controller
     public function actionCreate()
     {
         $model = new Localidades();
+        $popup = $this->request->get('popup');
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
+                if ($this->request->post('popup')) {
+                    return $this->redirect(['created-popup', 'IdLocalidad' => $model->IdLocalidad]);
+                }
                 return $this->redirect(['view', 'IdLocalidad' => $model->IdLocalidad]);
             }
         } else {
             $model->loadDefaultValues();
         }
 
+        if ($this->request->get('popup')) {
+            return $this->renderPartial('create-form', [
+                'model' => $model,
+            ]);
+        }
+
         return $this->render('create', [
             'model' => $model,
         ]);
+    }
+
+    /**
+     * Vista mostrada al crear una localidad desde popup (ej. desde presupuesto origen/destino).
+     */
+    public function actionCreatedPopup($IdLocalidad)
+    {
+        return $this->renderPartial('created-popup', ['IdLocalidad' => $IdLocalidad]);
     }
 
     /**

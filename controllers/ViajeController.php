@@ -607,6 +607,34 @@ class ViajeController extends \yii\web\Controller
         'infoPresupuesto' => $infoPresupuesto, 'tipoCoche' => $tipoCoche]);
     }
 
+    /**
+     * Devuelve la lista de clientes (personas tipo cliente) en JSON para refrescar selects.
+     */
+    public function actionClientesList()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $db = Yii::$app->db;
+        $rows = $db->createCommand("SELECT id, apellido, nombre FROM persona WHERE id_tipo_persona = 1 ORDER BY apellido, nombre")
+            ->queryAll();
+        return $rows;
+    }
+
+    /**
+     * Devuelve la lista de localidades (para origen/destino en presupuesto) en JSON.
+     */
+    public function actionLocalidadesList()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $db = Yii::$app->db;
+        $rows = $db->createCommand("SELECT l.idlocalidad, l.localidad, p.provincia, pa.pais
+            FROM localidades l
+            JOIN provincia p ON p.id = l.id_provincia
+            JOIN pais pa ON pa.id = p.id_pais
+            ORDER BY pa.pais, p.provincia, l.localidad")
+            ->queryAll();
+        return $rows;
+    }
+
     public function actionPresupuestoImprime($id)
     {        
         $db = Yii::$app->db;

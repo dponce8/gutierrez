@@ -73,6 +73,36 @@
   </div>
 </div>
 
+<!-- Modal Nuevo Cliente -->
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nuevo cliente</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body" style="min-height: 400px;">
+        <iframe id="iframeNuevoCliente" style="width: 100%; height: 500px; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nueva Localidad -->
+<div class="modal fade" id="modalNuevoLocalidad" tabindex="-1" aria-labelledby="modalNuevoLocalidadLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nueva localidad</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body" style="min-height: 400px;">
+        <iframe id="iframeNuevoLocalidad" style="width: 100%; height: 400px; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
     $(document).ready(function() {
         $(".my-chosen-select").chosen();
@@ -136,6 +166,59 @@
         });
 
         $('#modViajeModal').modal('show');
-    }  
+    }
+
+    window.refreshClientes = function(nuevoId) {
+        $.getJSON("index.php?r=viaje/clientes-list", function(data) {
+            var $sel = $('#s_cliente');
+            if ($sel.length === 0) return;
+            var firstOpt = $sel.find('option:first').clone();
+            $sel.find('option').remove();
+            $sel.append(firstOpt);
+            $.each(data, function(i, p) {
+                $sel.append($('<option></option>').val(p.id).text((p.apellido || '') + ' ' + (p.nombre || '')));
+            });
+            $sel.trigger('chosen:updated');
+            if (nuevoId) $sel.val(String(nuevoId)).trigger('chosen:updated');
+        });
+    };
+
+    window.cerrarModalNuevoCliente = function() {
+        $('#modalNuevoCliente').modal('hide');
+        document.getElementById('iframeNuevoCliente').src = 'about:blank';
+    };
+
+    window.tipoLocalidadModal = 'origen';
+
+    window.refreshLocalidades = function(nuevoId) {
+        $.getJSON("index.php?r=viaje/localidades-list", function(data) {
+            var tipo = window.tipoLocalidadModal || 'origen';
+            var $origen = $('#s_origen');
+            var $destino = $('#s_destino');
+            function llenarSelect($sel) {
+                if ($sel.length === 0) return;
+                var firstOpt = $sel.find('option:first').clone();
+                $sel.find('option').remove();
+                $sel.append(firstOpt);
+                $.each(data, function(i, row) {
+                    var id = row.idlocalidad != null ? row.idlocalidad : row.IdLocalidad;
+                    var texto = '[' + (row.pais || '') + '] ' + (row.provincia || '') + ' - ' + (row.localidad || '');
+                    $sel.append($('<option></option>').val(id).text(texto));
+                });
+                $sel.trigger('chosen:updated');
+            }
+            llenarSelect($origen);
+            llenarSelect($destino);
+            if (nuevoId && tipo) {
+                var $target = (tipo === 'origen') ? $origen : $destino;
+                if ($target.length) $target.val(String(nuevoId)).trigger('chosen:updated');
+            }
+        });
+    };
+
+    window.cerrarModalNuevoLocalidad = function() {
+        $('#modalNuevoLocalidad').modal('hide');
+        document.getElementById('iframeNuevoLocalidad').src = 'about:blank';
+    };
       
 </script>
